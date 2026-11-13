@@ -6,7 +6,7 @@ New inquiries answered, checked for conflicts and signed up as clients, without 
 
 ![The client side: the firm's website with the intake chat](docs/client.png)
 
-**Live demo:** _link to be added once deployed_
+**Live demo:** https://law-firm-front-office.vercel.app
 
 ## The problem
 
@@ -105,4 +105,4 @@ To use a Postgres server instead of the embedded database, set `DATABASE_URL` to
 
 ---
 
-Built by ChopMedia. Contact Hayden Huelskamp at chopscales@gmail.com, or find Hayden Huelskamp on LinkedIn.
+Built by ChopMedia. Contact Hayden Huelskamp at chopscales@gmail.com, or on [LinkedIn](https://www.linkedin.com/in/hayden-huelskamp-547a86302/).
