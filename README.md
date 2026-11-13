@@ -4,7 +4,7 @@ New inquiries answered, checked for conflicts and signed up as clients, without 
 
 > **Demo project.** This is a demonstration build by ChopMedia, not client work. Alder & Finch Law is a fictional firm. Every person, matter, phone number and email address in it is invented, and nothing is ever sent to anyone.
 
-![The inquiry list on the firm side](docs/inquiries.png)
+![The client side: the firm's website with the intake chat](docs/client.png)
 
 **Live demo:** _link to be added once deployed_
 
@@ -32,6 +32,8 @@ Three things worth clicking first:
 3. Open the **Outbox** to see everything the system would have sent along the way.
 
 **Reset demo** in the top bar puts everything back.
+
+![The firm side: every inquiry, scored and tracked](docs/inquiries.png)
 
 | The conflict check | Signing on a phone |
 | --- | --- |
@@ -103,4 +105,4 @@ To use a Postgres server instead of the embedded database, set `DATABASE_URL` to
 
 ---
 
-Built by ChopMedia. Contact: _add email and website here_
+Built by ChopMedia. Contact Hayden Huelskamp at chopscales@gmail.com, or find Hayden Huelskamp on LinkedIn.
