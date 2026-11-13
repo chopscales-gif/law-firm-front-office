@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  devIndicators: false,
+  // Every page is per-visitor (cookie-keyed sandbox), so nothing is prerendered
+  // and Cache Components would add Suspense plumbing for no benefit.
+  serverExternalPackages: ["@electric-sql/pglite"],
   turbopack: {
     rules: {
       "*.css": {

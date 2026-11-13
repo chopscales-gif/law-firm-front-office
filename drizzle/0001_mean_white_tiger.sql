@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "matters_lead_unique" ON "matters" USING btree ("sandbox_id","lead_id");
