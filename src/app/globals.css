@@ -1,37 +1,42 @@
 @import "tailwindcss";
 
+/*
+ * Alder & Finch. Colours come from the Great Salt Lake at dusk: the plum of the
+ * Wasatch in shadow, the salt crust, the rose of the lake's north arm.
+ */
 @theme inline {
-  --color-ink: #16202b;
-  --color-ink-soft: #2a3644;
-  --color-juniper: #24493f;
-  --color-juniper-deep: #1a372f;
-  --color-juniper-tint: #e3ece7;
-  --color-paper: #f3f5f1;
+  --color-ink: #1e1823;
+  --color-plum: #45233f;
+  --color-plum-deep: #331930;
+  --color-rose: #a03a62;
+  --color-rose-tint: #f4e1e9;
+  --color-rose-pale: #f0b8cc;
+  --color-salt: #f5f3f6;
   --color-surface: #ffffff;
-  --color-line: #d7ddd4;
-  --color-muted: #586570;
-  --color-brass: #96691f;
-  --color-brass-tint: #f4ead6;
-  --color-flag: #b3402f;
-  --color-flag-tint: #f8e6e2;
-  --color-amber: #8a5c0a;
-  --color-amber-tint: #f8edd2;
-  --font-serif: var(--font-newsreader), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --color-line: #dcd6df;
+  --color-muted: #5a5566;
+  --color-flag: #b3261e;
+  --color-flag-tint: #fbe9e7;
+  --color-amber: #8a5a00;
+  --color-amber-tint: #fbf0d5;
+  --color-demo: #17131b;
+  --font-serif: var(--font-besley), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-salt);
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-juniper);
+  outline: 3px solid var(--color-rose);
   outline-offset: 2px;
 }
 
-.demo-chrome :focus-visible {
+.on-dark :focus-visible,
+.on-dark:focus-visible {
   outline-color: #ffffff;
 }
 
@@ -41,11 +46,11 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    border: 1px solid transparent;
-    font-size: 0.9375rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    border-radius: 0.25rem;
+    border: 1.5px solid transparent;
+    font-size: 1rem;
     font-weight: 600;
     line-height: 1.2;
     cursor: pointer;
@@ -56,19 +61,19 @@ body {
     opacity: 0.55;
   }
   .btn-primary {
-    background: var(--color-juniper);
+    background: var(--color-plum);
     color: #ffffff;
   }
   .btn-primary:hover:not(:disabled) {
-    background: var(--color-juniper-deep);
+    background: var(--color-plum-deep);
   }
   .btn-quiet {
     background: var(--color-surface);
-    border-color: var(--color-line);
-    color: var(--color-ink);
+    border-color: var(--color-plum);
+    color: var(--color-plum);
   }
   .btn-quiet:hover:not(:disabled) {
-    border-color: var(--color-ink);
+    background: var(--color-rose-tint);
   }
   .btn-danger {
     background: var(--color-surface);
@@ -81,33 +86,51 @@ body {
 
   .field {
     width: 100%;
-    min-height: 2.5rem;
+    min-height: 2.75rem;
     padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-line);
-    border-radius: 0.375rem;
+    border: 1.5px solid #8d8698;
+    border-radius: 0.25rem;
     background: var(--color-surface);
     font-size: 1rem;
   }
   .field::placeholder {
-    color: #8a949c;
+    color: #6b6676;
   }
 
-  .panel {
+  .link {
+    color: var(--color-rose);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+  .link:hover {
+    color: var(--color-plum);
+  }
+
+  /*
+   * Anything that belongs to the demo rather than to the firm's own software
+   * is drawn the same way: a dashed outline, like a note clipped to the page.
+   */
+  .demo-note {
+    border: 1.5px dashed var(--color-ink);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+  }
+
+  /* The engagement letter, the one thing in the app shown as a sheet of paper. */
+  .letter {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
-    border-radius: 0.5rem;
-  }
-
-  /* The engagement letter, shown as a sheet of paper wherever it appears. */
-  .letter {
+    box-shadow: 0 1px 0 var(--color-line), 0 18px 40px -28px rgba(69, 35, 63, 0.55);
     font-family: var(--font-serif);
     font-size: 1.0625rem;
-    line-height: 1.65;
+    line-height: 1.7;
   }
   .letter h3 {
-    margin-top: 1.5rem;
-    font-family: var(--font-sans);
-    font-size: 0.9375rem;
+    margin-top: 1.75rem;
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
     font-weight: 600;
   }
   .letter p,
@@ -138,5 +161,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .message-in {
     animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }

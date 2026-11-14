@@ -28,7 +28,7 @@ Each step is small. Together they are days of delay and several places for a mis
 Three things worth clicking first:
 
 1. On the client side, play **A conflict of interest**. Then switch to **Firm side**, open Marcus Bell, and run the conflict check. The other side gave her name as Kate Reyes. The firm knows her as Katherine O'Malley-Reyes, a current client.
-2. Open **Gideon Marsh**, whose letter is waiting for signature, and choose **Play the client** to sign it. Then open the signed PDF.
+2. Open **Gideon Marsh**, whose letter is waiting for signature, and under **Play the client** choose **Open the signing page** to sign it. Then open the signed PDF.
 3. Open the **Outbox** to see everything the system would have sent along the way.
 
 **Reset demo** in the top bar puts everything back.

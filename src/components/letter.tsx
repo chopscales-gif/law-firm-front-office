@@ -4,11 +4,11 @@ import { FIRM } from "@/lib/intake";
 /** The engagement letter as it reads on screen. The PDF is built from the same blocks. */
 export function Letter({ blocks, children }: { blocks: Block[]; children?: React.ReactNode }) {
   return (
-    <article className="letter rounded-sm border border-line bg-surface px-6 py-8 shadow-[0_10px_30px_-20px_rgba(22,32,43,0.5)] sm:px-12 sm:py-12">
-      <header className="border-b border-juniper pb-3">
-        <p className="text-2xl leading-none text-juniper-deep">{FIRM.name}</p>
-        <p className="mt-1 font-sans text-[0.8125rem] text-muted">
-          {FIRM.address}. {FIRM.phone}
+    <article className="letter px-6 py-8 sm:px-14 sm:py-14">
+      <header className="border-b-2 border-plum pb-3">
+        <p className="font-serif text-2xl font-semibold leading-none text-plum">{FIRM.name}</p>
+        <p className="mt-1.5 text-[0.9375rem] text-muted">
+          {FIRM.address}. <span className="whitespace-nowrap">{FIRM.phone}</span>
         </p>
       </header>
       {blocks.map((block, i) =>

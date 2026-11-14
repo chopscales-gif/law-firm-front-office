@@ -17,9 +17,9 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
 
   if (!view) {
     return (
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-16">
-        <h1 className="font-serif text-3xl">This signing link does not work here</h1>
-        <p className="mt-3 leading-relaxed text-muted">
+      <main className="w-full max-w-3xl flex-1 px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
+        <h1 className="font-serif text-4xl font-medium leading-tight">This signing link does not work here</h1>
+        <p className="mt-4 max-w-[62ch] text-lg leading-relaxed text-muted">
           Each visitor to this demo gets their own private copy of the sample data, so a signing link only opens in the browser that created it. The link
           also stops working when the demo is reset.
         </p>
@@ -34,24 +34,27 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
   const signed = request.status === "signed";
 
   return (
-    <main className="mx-auto w-full max-w-[44rem] flex-1 px-4 py-8 sm:py-12">
-      <p className="font-serif text-2xl text-juniper-deep">{FIRM.name}</p>
-      <h1 className="mt-4 font-serif text-3xl leading-tight sm:text-4xl">{signed ? "Thank you. Your letter is signed." : `${request.signerName}, please read and sign your engagement letter.`}</h1>
-      <p className="mt-3 max-w-[62ch] leading-relaxed text-muted">
-        {signed
-          ? `Signed ${request.signedAt ? fmtDateTime(request.signedAt) : ""}. A real installation would email you a copy and tell the firm. This demo sends nothing.`
-          : "Read the letter below. If anything is unclear, call the firm before you sign."}
-      </p>
-
-      {signed && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          <a href={`/api/documents/${document.id}/pdf`} target="_blank" className="btn btn-primary">
-            Open your signed copy
-          </a>
+    <>
+      <header className="on-dark bg-plum text-white">
+        <div className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-5 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
+          <p className="font-serif text-[1.375rem] font-semibold leading-none">{FIRM.name}</p>
+          <h1 className="mt-7 max-w-[24ch] font-serif text-[2rem] font-medium leading-[1.1] tracking-[-0.015em] sm:text-5xl">
+            {signed ? "Thank you. Your letter is signed." : `${request.signerName}, please read and sign your engagement letter.`}
+          </h1>
+          <p className="mt-4 max-w-[58ch] text-lg leading-relaxed text-white/85">
+            {signed
+              ? `Signed ${request.signedAt ? fmtDateTime(request.signedAt) : ""}. A real installation would email you a copy and tell the firm. This demo sends nothing.`
+              : `Read the letter below. If anything is unclear, call the firm on ${FIRM.phone} before you sign.`}
+          </p>
+          {signed && (
+            <a href={`/api/documents/${document.id}/pdf`} target="_blank" className="btn mt-6 bg-white text-plum hover:bg-rose-tint">
+              Open your signed copy
+            </a>
+          )}
         </div>
-      )}
+      </header>
 
-      <div className="mt-8">
+      <main className={`mx-auto grid w-full max-w-[72rem] flex-1 items-start gap-x-10 gap-y-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10 ${signed ? "lg:grid-cols-[minmax(0,1fr)_20rem]" : "lg:grid-cols-[minmax(0,1fr)_24rem]"}`}>
         <Letter blocks={document.blocks}>
           {signed && (
             <div className="mt-8 border-t border-line pt-4">
@@ -60,34 +63,34 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={request.signatureData} alt={`Signature of ${request.signerName}`} className="h-20" />
               ) : (
-                <p className="text-3xl italic text-[#1a2e66]">{request.signatureData}</p>
+                <p className="font-serif text-3xl italic text-[#1a2e66]">{request.signatureData}</p>
               )}
-              <p className="mt-1 font-sans text-[0.8125rem] text-muted">
+              <p className="mt-1 text-[0.9375rem] text-muted">
                 {request.signerName}, signed electronically {request.signedAt ? fmtDateTime(request.signedAt) : ""}
               </p>
             </div>
           )}
         </Letter>
-      </div>
 
-      {!signed && (
-        <div className="mt-8">
-          <SignPanel token={token} signerName={request.signerName} />
-        </div>
-      )}
+        {!signed && (
+          <div className="lg:sticky lg:top-6">
+            <SignPanel token={token} signerName={request.signerName} />
+          </div>
+        )}
 
-      {signed && (
-        <div className="demo-chrome mt-8 rounded-lg bg-ink p-5 text-white">
-          <p className="font-semibold">What just happened on the firm side</p>
-          <p className="mt-1 max-w-[62ch] text-[0.9375rem] leading-relaxed text-white/75">
-            The matter was opened, the client and matter were queued for Clio, a signed copy was emailed, and the new names joined the files that every
-            future conflict check searches.
-          </p>
-          <Link href={`/staff/leads/${lead.id}`} className="btn mt-4 bg-white text-ink hover:bg-white/90">
-            See it on the firm side
-          </Link>
-        </div>
-      )}
-    </main>
+        {signed && (
+          <div className="demo-note p-5 lg:sticky lg:top-6">
+            <p className="font-semibold">What just happened on the firm side</p>
+            <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted">
+              The matter was opened, the client and matter were queued for Clio, a signed copy was emailed, and the new names joined the files that every
+              future conflict check searches.
+            </p>
+            <Link href={`/staff/leads/${lead.id}`} className="btn btn-primary mt-4">
+              See it on the firm side
+            </Link>
+          </div>
+        )}
+      </main>
+    </>
   );
 }

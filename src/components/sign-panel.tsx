@@ -78,14 +78,14 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
   }
 
   const tab = (active: boolean) =>
-    `rounded-md px-3 py-1.5 text-sm font-semibold ${active ? "bg-juniper text-white" : "text-ink hover:bg-paper"}`;
+    `min-h-11 flex-1 cursor-pointer rounded-sm px-4 font-semibold ${active ? "bg-plum text-white" : "text-plum hover:bg-rose-tint"}`;
 
   return (
-    <form onSubmit={submit} className="panel p-5 sm:p-6">
-      <h2 className="font-serif text-2xl">Sign the letter</h2>
-      <p className="mt-1 text-[0.9375rem] text-muted">Signing as {signerName}.</p>
+    <form onSubmit={submit} className="rounded-lg border-2 border-plum bg-surface p-5 sm:p-6">
+      <h2 className="font-serif text-2xl font-semibold">Sign the letter</h2>
+      <p className="mt-1 text-muted">Signing as {signerName}.</p>
 
-      <div role="group" aria-label="How to sign" className="mt-4 inline-flex gap-1 rounded-lg border border-line p-1">
+      <div role="group" aria-label="How to sign" className="mt-4 flex gap-1 rounded border-[1.5px] border-plum/45 p-1">
         <button type="button" aria-pressed={kind === "typed"} onClick={() => setKind("typed")} className={tab(kind === "typed")}>
           Type your name
         </button>
@@ -96,7 +96,7 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
 
       {kind === "typed" ? (
         <div className="mt-4">
-          <label htmlFor="typed-signature" className="block text-sm font-semibold">
+          <label htmlFor="typed-signature" className="block font-semibold">
             Your full name
           </label>
           <input
@@ -114,7 +114,7 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
         </div>
       ) : (
         <div className="mt-4">
-          <p className="text-sm font-semibold">Draw your signature</p>
+          <p className="font-semibold">Draw your signature</p>
           <canvas
             ref={canvasRef}
             onPointerDown={onPointerDown}
@@ -122,26 +122,26 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
             onPointerUp={() => (drawing.current = false)}
             onPointerCancel={() => (drawing.current = false)}
             aria-label="Signature drawing area"
-            className="mt-1.5 h-40 w-full touch-none rounded-md border border-line bg-surface"
+            className="mt-1.5 h-40 w-full touch-none rounded border-[1.5px] border-[#8d8698] bg-surface"
           />
-          <button type="button" onClick={clearDrawing} className="mt-2 text-sm font-semibold text-juniper hover:underline">
+          <button type="button" onClick={clearDrawing} className="link mt-1 inline-flex min-h-11 cursor-pointer items-center">
             Clear and start again
           </button>
         </div>
       )}
 
-      <label className="mt-5 flex items-start gap-3 text-[0.9375rem] leading-relaxed">
-        <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-1 size-4 shrink-0 accent-juniper" />
+      <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 leading-relaxed">
+        <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 size-6 shrink-0 cursor-pointer accent-plum" />
         <span>I agree to sign this letter electronically, and I understand my electronic signature has the same effect as signing on paper.</span>
       </label>
 
       {error && (
-        <p role="alert" className="mt-3 text-sm text-flag">
+        <p role="alert" className="mt-3 font-semibold text-flag">
           {error}
         </p>
       )}
 
-      <button type="submit" disabled={pending} className="btn btn-primary mt-5 w-full sm:w-auto">
+      <button type="submit" disabled={pending} className="btn btn-primary mt-5 min-h-12 w-full">
         {pending ? "Signing" : "Sign the letter"}
       </button>
     </form>

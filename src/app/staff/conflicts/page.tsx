@@ -41,15 +41,15 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
         business names written differently. It finds matches for a lawyer to assess. It does not decide whether a conflict exists.
       </PageHeader>
 
-      <form action="/staff/conflicts" className="panel grid gap-4 p-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end sm:p-5">
+      <form action="/staff/conflicts" className="grid max-w-[60rem] gap-4 border-y-2 border-plum py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
         <div>
-          <label htmlFor="name" className="block text-sm font-semibold">
+          <label htmlFor="name" className="block font-semibold">
             Name of a person or business
           </label>
           <input id="name" name="name" defaultValue={name} required maxLength={120} autoComplete="off" className="field mt-1.5" />
         </div>
         <div>
-          <label htmlFor="role" className="block text-sm font-semibold">
+          <label htmlFor="role" className="block font-semibold">
             Who they are
           </label>
           <select id="role" name="role" defaultValue={role} className="field mt-1.5">
@@ -65,17 +65,18 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
         </button>
       </form>
 
-      <div className="mt-4">
-        <p className="text-sm font-semibold">Names to try</p>
-        <ul className="mt-2 flex flex-wrap gap-2">
+      <div className="demo-note mt-6 max-w-[60rem] px-4 py-3">
+        <p className="font-semibold">Names to try</p>
+        <p className="text-[0.9375rem] text-muted">Each one is written differently from the name on file.</p>
+        <ul className="mt-2.5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {EXAMPLES.map((example) => (
             <li key={example.name}>
               <Link
                 href={`/staff/conflicts?name=${encodeURIComponent(example.name)}&role=${example.role}`}
-                className="inline-flex flex-col rounded-md border border-line bg-surface px-3 py-1.5 text-sm hover:border-ink"
+                className="flex min-h-11 flex-col justify-center rounded border-[1.5px] border-line px-3 py-1.5 hover:border-demo"
               >
-                <span className="font-semibold">{example.name}</span>
-                <span className="text-[0.8125rem] text-muted">{example.shows}</span>
+                <span className="font-semibold leading-snug">{example.name}</span>
+                <span className="text-sm leading-snug text-muted">{example.shows}</span>
               </Link>
             </li>
           ))}
@@ -83,13 +84,13 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
       </div>
 
       {result && (
-        <section aria-live="polite" className="mt-8">
-          <h2 className="font-serif text-2xl">Results for {name}</h2>
+        <section aria-live="polite" className="mt-10 max-w-[60rem]">
+          <h2 className="font-serif text-[1.75rem] font-medium leading-tight">Results for {name}</h2>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <OutcomeChip outcome={result.outcome} />
-            <p className="text-[0.9375rem]">{result.summary}</p>
+            <p className="font-semibold">{result.summary}</p>
           </div>
-          <p className="mt-1 text-[0.8125rem] text-muted">{result.partiesSearched} names on file searched.</p>
+          <p className="mt-1 text-[0.9375rem] text-muted">{result.partiesSearched} names on file searched.</p>
           <div className="mt-4">
             <HitList hits={result.hits} />
           </div>

@@ -29,7 +29,7 @@ export function ActionButton({ action, children, pendingLabel, variant = "primar
         {pending ? pendingLabel : children}
       </button>
       {error && (
-        <p role="alert" className="mt-2 text-sm text-flag">
+        <p role="alert" className="mt-2 font-semibold text-flag">
           {error}
         </p>
       )}

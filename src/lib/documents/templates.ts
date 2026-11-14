@@ -156,7 +156,7 @@ export function letterFields(input: LetterInput): Record<string, string> {
     adverseClause: input.adverseName ? `, in which the other party is ${input.adverseName}` : "",
     // Probate is court work on someone's estate, not a set of documents to draft.
     estateScope: probate
-      ? `We will act for you in the probate of the estate${input.relatedNames.length ? ` of ${input.relatedNames[0]}` : ""}. This covers preparing and filing the application, notices to heirs and creditors, and guiding the personal representative through to closing the estate. It does not cover a contested hearing, tax returns, or selling property.`
+      ? `We will act for you in the probate of the estate you told us about. This covers preparing and filing the application, notices to heirs and creditors, and guiding the personal representative through to closing the estate. It does not cover a contested hearing, tax returns, or selling property.`
       : `We will prepare your ${MATTER_NOUN[input.matterType]}${related}. This covers a planning meeting, drafting, one round of revisions, and a signing meeting with witnesses and a notary. It does not cover transferring property titles, tax returns, or later amendments.`,
     estateSchedule: probate
       ? "Half is due when you sign this letter and half when the estate is closed."

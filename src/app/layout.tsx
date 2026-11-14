@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Newsreader } from "next/font/google";
+import { Atkinson_Hyperlegible_Next, Besley } from "next/font/google";
 import { DemoBar } from "@/components/demo-bar";
 import "./globals.css";
 
-const instrument = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"] });
-const newsreader = Newsreader({ variable: "--font-newsreader", subsets: ["latin"], style: ["normal", "italic"] });
+// Besley is a Clarendon, the face of old law-office signs and of the American West. Atkinson Hyperlegible
+// was drawn for readers with low vision, which suits a practice whose clients are often older.
+const atkinson = Atkinson_Hyperlegible_Next({ variable: "--font-atkinson", subsets: ["latin"] });
+const besley = Besley({ variable: "--font-besley", subsets: ["latin"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: { default: "Law firm front office (demo)", template: "%s | Law firm front office (demo)" },
@@ -17,7 +19,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${instrument.variable} ${newsreader.variable} h-full antialiased`}>
+    <html lang="en" className={`${atkinson.variable} ${besley.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <DemoBar />
         {children}

@@ -19,14 +19,14 @@ export function DecisionForm({ leadId, noteRequiredToClear }: { leadId: string; 
   }
 
   return (
-    <div>
-      <label htmlFor="decision-note" className="block text-sm font-semibold">
+    <div className="max-w-[40rem]">
+      <label htmlFor="decision-note" className="block font-semibold">
         Note for the file
       </label>
-      <p className="mt-0.5 text-[0.8125rem] text-muted">
+      <p className="mt-0.5 text-[0.9375rem] text-muted">
         {noteRequiredToClear
           ? "Required. The check found something, so say why it is safe to proceed, or why not."
-          : "Optional when clearing. Required if you flag or decline."}
+          : "Optional when clearing. Required if you hold or decline."}
       </p>
       <textarea
         id="decision-note"
@@ -49,7 +49,7 @@ export function DecisionForm({ leadId, noteRequiredToClear }: { leadId: string; 
         </button>
       </div>
       {error && (
-        <p role="alert" className="mt-2 text-sm text-flag">
+        <p role="alert" className="mt-2 font-semibold text-flag">
           {error}
         </p>
       )}

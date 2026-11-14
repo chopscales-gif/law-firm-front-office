@@ -21,28 +21,28 @@ export default async function MattersPage() {
         would be read from the practice management system. When a client signs an engagement letter here, the new matter joins the list.
       </PageHeader>
 
-      <ul className="space-y-3">
+      <ul className="border-t-2 border-plum">
         {matters.map((matter) => (
-          <li key={matter.id} className="panel p-4 sm:p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h2 className="font-serif text-xl leading-snug">{matter.name}</h2>
-              <p className="text-[0.8125rem] text-muted">
+          <li key={matter.id} className="grid gap-x-10 gap-y-3 border-b border-line py-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div>
+              <h2 className="font-serif text-xl font-semibold leading-snug">{matter.name}</h2>
+              <p className="mt-1 text-[0.9375rem] text-muted">
                 {matter.status === "open" ? "Open" : "Closed"}, {matter.practiceArea === "estate" ? "estate planning" : "family law"}, opened{" "}
                 {fmtDate(matter.openedOn)}
               </p>
             </div>
-            <ul className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
+            <ul className="grid content-start gap-x-8 gap-y-3 sm:grid-cols-2">
               {matter.parties.map((party) => (
-                <li key={party.id} className="text-[0.9375rem]">
-                  <span className="text-[0.8125rem] text-muted">{ROLE[party.role]}</span>
+                <li key={party.id} className="leading-snug">
+                  <span className="text-[0.9375rem] text-muted">{ROLE[party.role]}</span>
                   <span className="block">{party.name}</span>
-                  {party.aliases.length > 0 && <span className="block text-[0.8125rem] text-muted">Also known as {party.aliases.join(", ")}</span>}
+                  {party.aliases.length > 0 && <span className="block text-[0.9375rem] text-muted">Also known as {party.aliases.join(", ")}</span>}
                 </li>
               ))}
             </ul>
             {matter.leadId && (
-              <p className="mt-3 text-sm">
-                <Link href={`/staff/leads/${matter.leadId}`} className="font-semibold text-juniper hover:underline">
+              <p className="lg:col-start-2">
+                <Link href={`/staff/leads/${matter.leadId}`} className="link inline-flex min-h-11 items-center lg:min-h-0">
                   Opened from an inquiry in this app
                 </Link>
               </p>

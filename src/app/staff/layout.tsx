@@ -7,9 +7,11 @@ export default async function StaffLayout({ children }: LayoutProps<"/staff">) {
   const outbox = await outboxFor(ctx);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col lg:flex-row">
+    <div className="flex w-full flex-1 flex-col lg:flex-row">
       <StaffNav outboxCount={outbox.length} />
-      <main className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">{children}</main>
+      <main className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-12 lg:pb-16 lg:pt-10">
+        <div className="max-w-[72rem]">{children}</div>
+      </main>
     </div>
   );
 }

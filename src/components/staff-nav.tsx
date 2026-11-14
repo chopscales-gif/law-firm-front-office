@@ -10,7 +10,7 @@ const ITEMS = [
   { href: "/staff/outbox", label: "Outbox", short: "Outbox" },
 ];
 
-/** Side rail on wide screens, bottom bar on phones. */
+/** The plum rail on wide screens, the same spine the client side opens with. A bottom bar on phones. */
 export function StaffNav({ outboxCount }: { outboxCount: number }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/staff" ? pathname === "/staff" || pathname.startsWith("/staff/leads") : pathname.startsWith(href));
@@ -18,11 +18,11 @@ export function StaffNav({ outboxCount }: { outboxCount: number }) {
   return (
     <nav
       aria-label="Firm workspace"
-      className="fixed inset-x-0 bottom-0 z-10 flex border-t border-line bg-surface lg:static lg:w-56 lg:shrink-0 lg:flex-col lg:gap-1 lg:border-r lg:border-t-0 lg:p-4"
+      className="on-dark fixed inset-x-0 bottom-0 z-10 flex bg-plum text-white lg:static lg:w-60 lg:shrink-0 lg:flex-col lg:px-4 lg:py-8"
     >
-      <p className="mb-4 hidden px-3 font-serif text-xl leading-tight lg:block">
+      <p className="mb-8 hidden px-3 font-serif text-[1.375rem] font-semibold leading-tight lg:block">
         Alder &amp; Finch
-        <span className="block font-sans text-[0.8125rem] text-muted">Front office</span>
+        <span className="mt-1 block font-sans text-[0.9375rem] font-normal text-white/75">Front office</span>
       </p>
       {ITEMS.map((item) => {
         const active = isActive(item.href);
@@ -31,13 +31,15 @@ export function StaffNav({ outboxCount }: { outboxCount: number }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`flex flex-1 items-center justify-center gap-2 px-2 py-3 text-sm font-semibold lg:flex-none lg:justify-between lg:rounded-md lg:px-3 lg:py-2 ${
-              active ? "text-juniper-deep shadow-[inset_0_2px_0_var(--color-juniper)] lg:bg-juniper-tint lg:shadow-none" : "text-muted hover:text-ink"
+            className={`flex min-h-14 flex-1 items-center justify-center gap-2 px-2 text-[0.9375rem] font-semibold lg:min-h-11 lg:flex-none lg:justify-between lg:rounded-sm lg:px-3 lg:text-base ${
+              active
+                ? "bg-plum-deep shadow-[inset_0_3px_0_var(--color-rose-pale)] lg:shadow-[inset_3px_0_0_var(--color-rose-pale)]"
+                : "text-white/80 hover:bg-plum-deep/60 hover:text-white"
             }`}
           >
             <span className="lg:hidden">{item.short}</span>
             <span className="hidden lg:inline">{item.label}</span>
-            {item.href === "/staff/outbox" && <span className="hidden rounded-full bg-paper px-2 text-[0.8125rem] tabular-nums text-muted lg:inline">{outboxCount}</span>}
+            {item.href === "/staff/outbox" && <span className="hidden text-[0.9375rem] font-normal tabular-nums text-white/75 lg:inline">{outboxCount}</span>}
           </Link>
         );
       })}

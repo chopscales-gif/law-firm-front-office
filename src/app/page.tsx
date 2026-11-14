@@ -27,76 +27,85 @@ export default async function Home() {
   const opening = startChat(offerSlots(ctx.now, await bookedConsultTimes(ctx)));
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <p className="font-serif text-2xl leading-none">{FIRM.name}</p>
-          <p className="text-sm text-muted">
-            <span className="hidden sm:inline">Call us on </span>
-            <span className="font-semibold text-ink">{FIRM.phone}</span>
+    <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      {/* The spine: the firm speaking in its own voice. It carries the same plum as the rail on the firm side. */}
+      <div className="on-dark relative isolate flex flex-col overflow-hidden bg-plum text-white">
+        <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-plum-deep lg:block">
+          &amp;
+        </span>
+        <header className="flex items-baseline justify-between gap-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
+          <p className="font-serif text-[1.375rem] font-semibold leading-none">{FIRM.name}</p>
+          <p className="text-[0.9375rem] text-white/85">
+            <span className="hidden sm:inline">Call </span>
+            <a href={`tel:${FIRM.phone.replace(/\D/g, "")}`} className="inline-flex min-h-11 items-center font-semibold text-white underline decoration-white/40 underline-offset-4">
+              {FIRM.phone}
+            </a>
           </p>
-        </div>
-      </header>
+        </header>
 
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-x-12 gap-y-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:py-14">
-        <div>
-          <h1 className="font-serif text-4xl leading-[1.1] sm:text-5xl">Family law and estate planning in Salt Lake City.</h1>
-          <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-muted">
+        <div className="px-4 pb-8 pt-8 sm:px-6 lg:px-10 lg:pb-10 lg:pt-[clamp(2.5rem,9vh,6rem)]">
+          <h1 className="max-w-[16ch] text-balance font-serif text-[2.5rem] font-medium leading-[1.04] tracking-[-0.015em] sm:text-6xl lg:text-[min(4vw,4rem)]">
+            Family law and estate planning in Salt Lake City.
+          </h1>
+          <p className="mt-6 max-w-[42ch] text-lg leading-relaxed text-white/85 lg:text-xl">
             Tell us what is going on and we will book you a free consultation with an attorney. No forms to print, no phone tag.
           </p>
-
-          <div className="mt-10 hidden lg:block">
-            <FirmDetails />
-          </div>
         </div>
 
+        <div className="mt-auto hidden px-10 pb-8 lg:block">
+          <FirmDetails dark />
+          <FictionNote className="mt-10 max-w-[62ch] text-white/75" />
+        </div>
+      </div>
+
+      <main className="flex min-w-0 flex-col px-4 py-5 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100svh-3.875rem)] lg:min-h-[35rem] lg:px-10 lg:py-5">
         <Chat
           opening={opening.replies.map((text) => ({ role: "assistant", text }))}
           openingSuggestions={opening.suggestions}
           disclaimer={CHAT_DISCLAIMER}
           scenarios={SCENARIOS}
         />
-
-        <div className="lg:hidden">
-          <FirmDetails />
-        </div>
       </main>
 
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-6 text-sm leading-relaxed text-muted sm:px-6">
-          <p>
-            {FIRM.name}, {FIRM.address}. {FIRM.phone}.
-          </p>
-          <p className="mt-1">
-            {FIRM.name} is a fictional firm created for this demonstration. No legal services are offered here, and nothing on this site is legal advice.
-          </p>
-        </div>
-      </footer>
+      <div className="border-t border-line px-4 py-8 sm:px-6 lg:hidden">
+        <FirmDetails />
+        <FictionNote className="mt-8 text-muted" />
+      </div>
     </div>
   );
 }
 
-function FirmDetails() {
+function FictionNote({ className }: { className: string }) {
   return (
-    <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+    <p className={`text-sm leading-relaxed ${className}`}>
+      {FIRM.name}, {FIRM.address}. {FIRM.name} is a fictional firm created for this demonstration. No legal services are offered here, and nothing on this
+      site is legal advice.
+    </p>
+  );
+}
+
+function FirmDetails({ dark = false }: { dark?: boolean }) {
+  const quiet = dark ? "text-white/75" : "text-muted";
+  return (
+    <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
       <section>
-        <h2 className="font-serif text-xl">What we handle</h2>
-        <dl className="mt-3 space-y-3">
+        <h2 className="font-serif text-lg font-semibold">What we handle</h2>
+        <dl className="mt-3 space-y-2.5">
           {PRACTICE.map((item) => (
             <div key={item.title}>
-              <dt className="font-semibold">{item.title}</dt>
-              <dd className="text-[0.9375rem] text-muted">{item.text}</dd>
+              <dt className="font-semibold leading-snug">{item.title}</dt>
+              <dd className={`text-[0.9375rem] leading-snug ${quiet}`}>{item.text}</dd>
             </div>
           ))}
         </dl>
       </section>
       <section>
-        <h2 className="font-serif text-xl">What happens next</h2>
+        <h2 className="font-serif text-lg font-semibold">What happens next</h2>
         <ol className="mt-3 space-y-3">
           {NEXT_STEPS.map((step, i) => (
-            <li key={step} className="flex gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-juniper-tint text-sm font-semibold text-juniper-deep">{i + 1}</span>
-              <span className="text-[0.9375rem] leading-relaxed">{step}</span>
+            <li key={step} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2">
+              <span className={`font-serif text-lg font-semibold leading-snug ${dark ? "text-rose-pale" : "text-rose"}`}>{i + 1}</span>
+              <span className="leading-snug">{step}</span>
             </li>
           ))}
         </ol>

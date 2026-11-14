@@ -36,7 +36,9 @@ describe("engagement letter templates", () => {
 
   it("words a probate letter as court work on an estate, with its own fee", () => {
     const text = letterPlainText(renderLetter("engagement-estate", { ...input, matterType: "probate", adverseName: null, relatedNames: ["Rosa Hernández"] }).blocks);
-    expect(text).toContain("probate of the estate of Rosa Hernández");
+    expect(text).toContain("probate of the estate you told us about");
+    // The intake never asks who died, so a related name must not be presented as the deceased.
+    expect(text).not.toContain("estate of Rosa Hernández");
     expect(text).not.toContain("We will prepare your probate");
     expect(text).toContain("$3,200");
   });
