@@ -26,6 +26,12 @@ export async function listLeads(ctx: Ctx): Promise<Lead[]> {
   return [...rows.filter(urgent), ...rows.filter((lead) => !urgent(lead))];
 }
 
+/** Consultation times already given out, so the assistant does not offer them to someone else. */
+export async function bookedConsultTimes(ctx: Ctx): Promise<string[]> {
+  const rows = await ctx.db.select({ consultAt: leads.consultAt }).from(leads).where(eq(leads.sandboxId, ctx.sandboxId));
+  return rows.flatMap((row) => (row.consultAt ? [row.consultAt.toISOString()] : []));
+}
+
 export async function findLead(ctx: Ctx, leadId: string): Promise<Lead | null> {
   const [lead] = await ctx.db.select().from(leads).where(and(eq(leads.id, leadId), eq(leads.sandboxId, ctx.sandboxId)));
   return lead ?? null;

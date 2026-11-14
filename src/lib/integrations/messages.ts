@@ -1,5 +1,6 @@
 import { formatSlot } from "../chat/engine";
 import { FIRM, areaOf, matterLabel, type MatterType } from "../intake";
+import { TIER_LABEL } from "../scoring";
 
 /**
  * Everything the app would send to the outside world: emails, texts, and
@@ -23,11 +24,14 @@ type LeadLike = {
   matterType: MatterType;
   consultAt: Date | null;
   score: number;
-  scoreTier: string;
+  scoreTier: "hot" | "warm" | "cool";
   safetyConcern: boolean;
 };
 
 const first = (name: string) => name.trim().split(/\s+/)[0];
+
+/** Links in a message are written the way the recipient would get them, on the firm's (fictional) site. */
+const link = (path: string) => (path.startsWith("/") ? `${FIRM.site}${path}` : path);
 
 export function inquiryMessages(lead: LeadLike, staffUrl: string): Outgoing[] {
   const out: Outgoing[] = [];
@@ -54,7 +58,7 @@ export function inquiryMessages(lead: LeadLike, staffUrl: string): Outgoing[] {
       channel: "sms",
       recipient: lead.phone,
       subject: "Consultation reminder",
-      body: `${FIRM.shortName}: reminder of your consultation with ${FIRM.attorney} tomorrow, ${when}. Reply C to confirm or R to reschedule.`,
+      body: `${FIRM.shortName}: reminder of your consultation with ${FIRM.attorney} on ${when}. Reply C to confirm or R to reschedule.`,
       sendAt: new Date(lead.consultAt.getTime() - 24 * 3600_000),
     });
   }
@@ -64,11 +68,11 @@ export function inquiryMessages(lead: LeadLike, staffUrl: string): Outgoing[] {
     recipient: FIRM.email,
     subject: `${lead.safetyConcern ? "[Safety concern] " : ""}New ${matterLabel(lead.matterType).toLowerCase()} inquiry: ${lead.name} (score ${lead.score})`,
     body: [
-      `${lead.name} sent a new inquiry about ${matterLabel(lead.matterType).toLowerCase()}.`,
-      `Lead score: ${lead.score} (${lead.scoreTier}).`,
+      `${lead.name} sent a new inquiry. Matter: ${matterLabel(lead.matterType).toLowerCase()}.`,
+      `Intake score: ${lead.score} out of 100 (${TIER_LABEL[lead.scoreTier].toLowerCase()}).`,
       lead.safetyConcern ? "They mentioned a safety concern. Please review this one first." : null,
       when ? `Consultation booked: ${when}.` : "No consultation time chosen. They asked for a call back.",
-      `Run the conflict check before the consultation: ${staffUrl}`,
+      `Run the conflict check before the consultation: ${link(staffUrl)}`,
     ]
       .filter(Boolean)
       .join("\n\n"),
@@ -99,7 +103,7 @@ export function signatureRequestMessage(lead: LeadLike, signingUrl: string): Out
     body: [
       `Hi ${first(lead.name)},`,
       `Your engagement letter is ready. Please read it and sign online. It takes about two minutes.`,
-      signingUrl,
+      link(signingUrl),
       `${FIRM.attorney}\n${FIRM.name}`,
     ].join("\n\n"),
     payload: {
@@ -110,7 +114,7 @@ export function signatureRequestMessage(lead: LeadLike, signingUrl: string): Out
   };
 }
 
-export function signedMessages(lead: LeadLike, matterName: string, pdfUrl: string): Outgoing[] {
+export function signedMessages(lead: LeadLike, matterName: string): Outgoing[] {
   const out: Outgoing[] = [];
   if (lead.email) {
     out.push({
@@ -120,7 +124,7 @@ export function signedMessages(lead: LeadLike, matterName: string, pdfUrl: strin
       body: [
         `Hi ${first(lead.name)},`,
         `Thank you. A signed copy of your engagement letter is attached for your records, and ${FIRM.name} now represents you in this matter.`,
-        `Attachment: ${pdfUrl}`,
+        `Attached: Engagement letter, signed (PDF)`,
         `${FIRM.attorney}\n${FIRM.name}`,
       ].join("\n\n"),
     });

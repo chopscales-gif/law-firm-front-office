@@ -76,7 +76,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
                 </div>
                 <div className="min-w-0 text-[0.9375rem] text-muted">
                   <p>Arrived {timeAgo(lead.createdAt, ctx.now)}</p>
-                  <p className="truncate">{lead.consultAt ? `Consultation ${formatSlot(lead.consultAt)}` : "Wants a call back"}</p>
+                  <p className="truncate">{lead.consultAt ? `Consultation ${formatSlot(lead.consultAt)}` : ["new", "cleared"].includes(lead.status) ? "Wants a call back" : ""}</p>
                 </div>
                 <div className="justify-self-end">
                   <StatusChip status={lead.status} />

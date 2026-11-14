@@ -73,8 +73,19 @@ function strengthOf(score: number): Strength {
  * What the pairing of roles means for the firm. These flag items for a lawyer to
  * assess; whether a conflict actually exists is the lawyer's call.
  */
-function assess(subjectRole: Subject["role"], party: PartyRecord): { level: Level; relationship: string } {
+function assess(subjectRole: Subject["role"], party: PartyRecord, strength: Strength): { level: Level; relationship: string } {
   const matter = `${party.matterName} (${party.matterStatus})`;
+  const { level } = assessRoles(subjectRole, party, matter);
+  // A weak match is usually a different person, so it is never described as if it were the same one.
+  if (strength === "weak") {
+    const who = subjectRole === "prospect" ? "The prospect" : subjectRole === "adverse" ? "The other side" : "This person";
+    const onFile = party.role === "client" ? "a client" : party.role === "opposing" ? "the opposing party" : "a related party";
+    return { level, relationship: `${who} shares only part of a name with ${party.name}, ${onFile} in ${matter}. Could be a relative, or no connection.` };
+  }
+  return assessRoles(subjectRole, party, matter);
+}
+
+function assessRoles(subjectRole: Subject["role"], party: PartyRecord, matter: string): { level: Level; relationship: string } {
   if (subjectRole === "prospect") {
     if (party.role === "opposing") {
       return party.matterStatus === "open"
@@ -130,7 +141,10 @@ export function runConflictCheck(subjects: Subject[], parties: PartyRecord[]): C
 
       const candidates = [party.name, ...party.aliases];
       candidates.forEach((candidate, index) => {
-        const comparison = compareNames(subjectName, candidate, { a: subject.kind });
+        const asGiven = compareNames(subjectName, candidate, { a: subject.kind });
+        // A bare name typed into the search ("WRPM") may be a business: against a business on file, read it both ways.
+        const asBusiness = !subject.kind && party.kind === "organization" ? compareNames(subjectName, candidate, { a: "organization" }) : null;
+        const comparison = asBusiness && asBusiness.score > (asGiven?.score ?? 0) ? asBusiness : asGiven;
         if (!comparison) return;
         const viaAlias = index > 0;
         if (!best || comparison.score > best.score) {
@@ -164,7 +178,7 @@ export function runConflictCheck(subjects: Subject[], parties: PartyRecord[]): C
       const found = best as { score: number; basis: MatchBasis; reasons: string[]; matchedName: string; viaAlias: boolean } | null;
       if (!found || found.score < WEAK) continue;
 
-      const { level, relationship } = assess(subject.role, party);
+      const { level, relationship } = assess(subject.role, party, strengthOf(found.score));
       hits.push({
         subject: { name: subjectName, role: subject.role },
         partyId: party.id,

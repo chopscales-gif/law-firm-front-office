@@ -3,6 +3,7 @@ import { offerSlots, startChat } from "@/lib/chat/engine";
 import { CHAT_DISCLAIMER } from "@/lib/chat/guardrail";
 import { SCENARIOS } from "@/lib/chat/scenarios";
 import { FIRM } from "@/lib/intake";
+import { bookedConsultTimes } from "@/server/queries";
 import { getCtx } from "@/server/session";
 
 const PRACTICE = [
@@ -22,8 +23,8 @@ const NEXT_STEPS = [
 
 export default async function Home() {
   // Seeds the visitor's sample data now, so the first chat message is not the slow one.
-  const { now } = await getCtx();
-  const opening = startChat(offerSlots(now));
+  const ctx = await getCtx();
+  const opening = startChat(offerSlots(ctx.now, await bookedConsultTimes(ctx)));
 
   return (
     <div className="flex flex-1 flex-col">

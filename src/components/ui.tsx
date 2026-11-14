@@ -1,5 +1,6 @@
 import type { LeadStatus } from "@/db/schema";
 import type { ConflictOutcome } from "@/lib/conflicts/check";
+import { TIER_LABEL } from "@/lib/scoring";
 
 const STATUS: Record<LeadStatus, { label: string; className: string }> = {
   new: { label: "New", className: "border-ink/30 bg-surface text-ink" },
@@ -26,7 +27,7 @@ export function OutcomeChip({ outcome }: { outcome: ConflictOutcome }) {
   return <span className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[0.8125rem] font-semibold ${className}`}>{label}</span>;
 }
 
-const TIER = { hot: "Strong fit", warm: "Good fit", cool: "Weak fit" };
+const TIER = TIER_LABEL;
 
 /** The lead score as a number in brass, the one place that colour is used for data. */
 export function Score({ value, tier, size = "sm" }: { value: number; tier: "hot" | "warm" | "cool"; size?: "sm" | "lg" }) {

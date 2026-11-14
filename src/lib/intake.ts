@@ -7,6 +7,7 @@ export const FIRM = {
   address: "410 Example Avenue, Suite 200, Salt Lake City, UT 84000",
   phone: "(801) 555-0100",
   email: "intake@alderfinch.example",
+  site: "https://alderfinch.example",
   attorney: "Naomi Alder",
   hourlyRate: 285,
   retainer: { family: 3500, estate: 1500 },

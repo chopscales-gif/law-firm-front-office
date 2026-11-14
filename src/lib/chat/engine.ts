@@ -70,7 +70,7 @@ const OTHER_STATES = [
 ];
 
 const OUTSIDE_PATTERN =
-  /\b(dui|criminal|arrest\w*|charged|injur\w*|accident|immigration|visa|evict\w*|landlord|tenant|bankrupt\w*|lawsuit|sue|sued|suing|contract|employment|fired|patent|trademark|business|llc|tax(es)?)\b/;
+  /\b(dui|criminal|arrest\w*|charged|injur\w*|accident|immigration|visa|evict\w*|landlord|tenant|bankrupt\w*|lawsuit|sue|sued|suing|contract|employment|fired|patent|trademark|business|llc|tax(es)?|tickets?|speeding|traffic|citation|felony|misdemeanou?r|foreclos\w*|debts?|malpractice|workers'? comp\w*|discriminat\w*|harass\w*|wages?|real estate|zoning|copyright)\b/;
 
 // Checked in order. Words that are also everyday verbs ("will you help", "I don't
 // trust him") only count when they are used as the name of a document.
@@ -137,6 +137,12 @@ function heardSignals(state: ChatState): Partial<Record<Signal, true>> {
 const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
 const PHONE = /(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/;
 
+/** The number as the firm writes it, "(801) 555-0188", however the visitor typed it. */
+function findPhone(text: string): string | null {
+  const digits = text.match(PHONE)?.[0].replace(/\D/g, "").slice(-10);
+  return digits ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : null;
+}
+
 function titleCase(name: string): string {
   return name
     .split(/\s+/)
@@ -158,17 +164,107 @@ export function extractName(text: string): string | null {
     .trim();
   if (!cleaned || EMAIL.test(cleaned) || /\d/.test(cleaned) || text.includes("?")) return null;
   const words = cleaned.split(/\s+/);
-  if (words.length > 6 || words.some((w) => NOT_A_NAME.has(w.toLowerCase()))) return null;
+  if (words.length > 5 || words.some((w) => !isNameWord(w))) return null;
   return titleCase(cleaned);
+}
+
+/** A word that could be part of a name: letters only, and not everyday intake vocabulary. */
+function isNameWord(word: string): boolean {
+  return /^[\p{L}][\p{L}'’.-]*$/u.test(word) && !NOT_A_NAME.has(word.toLowerCase().replace(/’/g, "'").replace(/\.$/, ""));
 }
 
 const NOT_A_NAME = new Set([
   "i", "need", "want", "help", "the", "is", "are", "was", "have", "has", "we", "you", "it", "not", "dont", "don't",
   "know", "sure", "what", "why", "how", "when", "who", "please", "with", "for", "about", "divorce", "custody",
   "lawyer", "attorney", "yes", "ok", "okay", "thanks", "hello",
+  // Answers to the other questions, which must never be taken for a person.
+  "a", "an", "and", "or", "but", "of", "in", "on", "at", "to", "from", "this", "that", "there", "there's", "theres", "here",
+  "my", "me", "mine", "our", "your", "his", "her", "their", "he", "she", "they", "him", "them", "us", "no", "nope", "none",
+  "one", "else", "nobody", "anyone", "someone", "just", "only", "both", "neither", "either", "maybe", "idk", "unsure",
+  "outside", "inside", "elsewhere", "utah", "county", "city", "state", "lake", "planning", "ahead", "soon", "rush", "urgent",
+  "court", "date", "hearing", "deadline", "within", "month", "months", "week", "weeks", "today", "tomorrow", "two",
+  "online", "search", "google", "friend", "family", "member", "worked", "before", "something", "other", "home", "children",
+  "kids", "business", "call", "instead", "first", "second", "third", "monday", "tuesday", "wednesday", "thursday", "friday",
+  "am", "pm", "probate", "guardianship", "adoption", "living", "child", "support", "husband", "wife", "spouse", "partner",
+  "ex", "brother", "sister", "mother", "father", "mom", "dad", "son", "daughter", "parent", "rather", "say", "would",
 ]);
 
 const NONE_PATTERN = /^(no|none|nope|no one|nobody|n\/a|na|nothing|just me|only me|skip|not applicable|no one else|there is(n't| not) (one|anyone))\b/i;
+/** "I don't know his name" is an answer too. The firm asks again at the consultation. */
+const UNKNOWN_PATTERN = /^(i (really )?(don'?t|do not) know|not sure|no idea|unknown|i'?d rather not|i would rather not|prefer not)\b/i;
+
+const NAME_WORD = "[A-Z][\\p{L}'’-]+";
+const SAID_NAME = new RegExp(`\\b(?:[Mm]y name is|[Mm]y name's|[Nn]ame's|I am|I'm|I’m|[Tt]his is)\\s+(${NAME_WORD}(?:\\s+${NAME_WORD}){1,2})`, "u");
+const SAID_OTHER = new RegExp(
+  `\\b(?:my|our) (?:(?:soon[- ]to[- ]be|ex|former|late)[- ])?(?:husband|wife|spouse|partner|ex|fiancee?|co-?parent|brother|sister|mother|father|mom|dad|son|daughter|business partner)(?:,| is| named|'s name is)?\\s+(${NAME_WORD}\\s+${NAME_WORD})`,
+  "u",
+);
+const SAID_HOME = /\b(?:i|we)(?: am| are|'m|’m|'re|’re)?(?: currently)? (?:live|living|reside|residing|based|located)(?: \w+)? (?:in|near|at|outside of)\b([^.;!?]*)|\b(?:i'm|i’m|i am|we're|we’re|we are) (?:in|from)\b([^.;!?]*)|\bfrom ((?:[a-z]+ ){1,2}county)\b/i;
+const SAID_DEADLINE = /\b(served|hearing|court date|deadline|summons|emergency|urgent|asap)\b/;
+const SAID_NO_RUSH = /\b(no rush|not urgent|no hurry|planning ahead|plan ahead|no deadline|not in a hurry|whenever)\b/;
+const SAID_SOURCE = /\b(found|saw|heard about|came across|looked) (you|your firm|the firm|your website)\b|\b(referred|recommended|told me about you|sent me)\b|\b(worked with|used) (you|your firm|the firm|alder)\b/;
+
+/**
+ * Answers to questions that have not been asked yet: "I'm Dana Whitlock from Salt Lake County,
+ * no rush". Only plain statements count, so "the house in Bountiful" is not where the visitor lives.
+ * Returns what was noted, in the order the questions would have come.
+ */
+function overhear(text: string, state: ChatState, current: Step): Step[] {
+  const noted: Step[] = [];
+  const open = (step: Step) => step !== current && !state.answered.includes(step);
+  const take = (step: Step, slots: Partial<IntakeData>) => {
+    Object.assign(state.data, slots);
+    state.answered.push(step);
+    noted.push(step);
+  };
+  const lower = text.toLowerCase();
+  const namesWelcome = !["name", "otherParty", "contact", "slot"].includes(current);
+
+  if (namesWelcome && open("name")) {
+    const said = text.match(SAID_NAME)?.[1];
+    const name = said ? extractName(said) : null;
+    if (name && name.includes(" ")) take("name", { name });
+  }
+  if (namesWelcome && open("otherParty") && state.data.matterType && state.data.matterType !== "outside") {
+    const said = text.match(SAID_OTHER)?.[1];
+    const name = said ? extractName(said) : null;
+    if (name && name.includes(" ") && name !== state.data.name) {
+      take("otherParty", areaOf(state.data.matterType) === "family" ? { adverseName: name, relatedNames: [] } : { adverseName: null, relatedNames: [name] });
+    }
+  }
+  if (open("location")) {
+    const home = text.match(SAID_HOME);
+    const place = home ? parseStep("location", home[1] ?? home[2] ?? home[3], state) : null;
+    if (place) take("location", place.slots);
+  }
+  if (open("urgency") && current !== "slot") {
+    const clause = lower.split(/[.;!?,]|\bbut\b/).find((part) => SAID_DEADLINE.test(part) || SAID_NO_RUSH.test(part));
+    const urgency = clause ? parseStep("urgency", clause, state) : null;
+    if (urgency) take("urgency", urgency.slots);
+  }
+  if (open("source") && SAID_SOURCE.test(lower)) {
+    const clause = lower.split(/[.;!?]/).find((part) => SAID_SOURCE.test(part))!;
+    take("source", parseStep("source", clause, state)!.slots);
+  }
+  return noted;
+}
+
+/** One line telling the visitor what was picked up, so skipped questions do not look like forgotten ones. */
+function notedLine(noted: Step[], data: Partial<IntakeData>): string | null {
+  const parts: string[] = [];
+  if (noted.includes("otherParty")) {
+    const other = data.adverseName ?? data.relatedNames?.[0];
+    if (other) parts.push(`${other}'s name`);
+  }
+  if (noted.includes("location")) parts.push(data.county ? `that you live in ${data.county} County` : data.state === "Utah" ? "that you live in Utah" : `that you live ${data.state === "Outside Utah" ? "outside Utah" : `in ${data.state}`}`);
+  if (noted.includes("urgency")) parts.push(data.urgency === "deadline" ? "that there's a court date or deadline" : data.urgency === "soon" ? "that you want to move soon" : "that there's no rush");
+  if (noted.includes("source")) parts.push(data.source === "referral" ? "that you were referred" : data.source === "returning" ? "that you've worked with the firm before" : "how you found the firm");
+  if (!parts.length) return null;
+  const list = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  return `I've noted ${list}.`;
+}
+
+const LICENSED_ONLY_IN_UTAH = `One thing to know: the firm's attorneys are licensed only in Utah. If this involves a Utah court or Utah property the firm may still be able to help, so I'll carry on.`;
 
 function parseStep(step: Step, text: string, state: ChatState): Interpretation | null {
   const lower = text.toLowerCase().trim();
@@ -178,18 +274,24 @@ function parseStep(step: Step, text: string, state: ChatState): Interpretation |
       return type ? { slots: { matterType: type, description: text.trim() }, answered: ["matter"] } : null;
     }
     case "name": {
-      const name = extractName(text);
-      return name && name.split(" ").length >= 2 ? { slots: { name }, answered: ["name"] } : null;
+      // "Dana Whitlock, Salt Lake County" and "Dana Whitlock, dana@mail.example" both start with the name.
+      const lead = text.replace(EMAIL, " ").replace(PHONE, " ").split(/[,;\n]|\s+(?:and|from|in|or)\s+|\s+(?=i (?:live|am)\b|i'm\b)/i)[0];
+      const name = extractName(lead);
+      if (!name || name.split(" ").length < 2) return null;
+      const place = parseStep("location", text.slice(lead.length).replace(EMAIL, " "), state);
+      return place && !state.answered.includes("location")
+        ? { slots: { name, ...place.slots }, answered: ["name", "location"] }
+        : { slots: { name }, answered: ["name"] };
     }
     case "otherParty": {
       const family = state.data.matterType !== undefined && areaOf(state.data.matterType) === "family";
-      if (NONE_PATTERN.test(lower)) return { slots: { adverseName: null, relatedNames: [] }, answered: ["otherParty"] };
+      if (NONE_PATTERN.test(lower) || UNKNOWN_PATTERN.test(lower)) return { slots: { adverseName: null, relatedNames: [] }, answered: ["otherParty"] };
       const candidates = text
         .split(/\s+and\s+|[;,\n]/i)
         .map((part) => extractName(part))
         .filter((n): n is string => n !== null);
       // A conflict check on a first name or a surname alone proves nothing, so only full names count.
-      const names = candidates.filter((n) => n.includes(" "));
+      const names = candidates.filter((n) => n.includes(" ") && n !== state.data.name);
       if (!names.length) return null;
       return family
         ? { slots: { adverseName: names[0], relatedNames: names.slice(1) }, answered: ["otherParty"] }
@@ -223,7 +325,10 @@ function parseStep(step: Step, text: string, state: ChatState): Interpretation |
     }
     case "urgency": {
       let urgency: Urgency | null = null;
-      if (/\b(court|hearing|deadline|served|papers|summons|emergency|urgent|asap|right away|immediately|this week|next week|tomorrow)\b/.test(lower)) urgency = "deadline";
+      // "There's no court date" is not a court date.
+      const denied = /\b(no|not|never|without|don'?t|doesn'?t|isn'?t|aren'?t|haven'?t|hasn'?t)\b[^.;,!?]*\b(court|hearing|deadline|served|papers|summons|emergency|urgent|rush|hurry)\b/.test(lower);
+      if (denied) urgency = /\b(soon|month|weeks?|shortly|quickly)\b/.test(lower) ? "soon" : "planning";
+      else if (/\b(court|hearing|deadline|served|papers|summons|emergency|urgent|asap|right away|immediately|this week|next week|tomorrow)\b/.test(lower)) urgency = "deadline";
       else if (/\b(soon|month|weeks?|shortly|quickly)\b/.test(lower)) urgency = "soon";
       else if (/\b(planning|plan ahead|no rush|not urgent|whenever|eventually|someday|just looking|exploring|no deadline|no date)\b/.test(lower)) urgency = "planning";
       return urgency ? { slots: { urgency }, answered: ["urgency"] } : null;
@@ -251,7 +356,7 @@ function parseStep(step: Step, text: string, state: ChatState): Interpretation |
     }
     case "contact": {
       const email = text.match(EMAIL)?.[0] ?? null;
-      const phone = text.match(PHONE)?.[0] ?? null;
+      const phone = findPhone(text);
       return email || phone ? { slots: { email, phone }, answered: ["contact"] } : null;
     }
     case "source": {
@@ -267,6 +372,13 @@ function parseStep(step: Step, text: string, state: ChatState): Interpretation |
       }
       const byLabel = state.slots.find((s) => lower.includes(s.label.toLowerCase()));
       if (byLabel) return { slots: { consultAt: byLabel.iso }, answered: ["slot"] };
+      // "Monday", "Tuesday at 2:30" or "the 18th": taken when it points at exactly one of the offered times.
+      const mentioned = state.slots.filter((s) => {
+        const [weekday, , date, clock] = s.label.toLowerCase().replace(",", "").split(" ");
+        const time = new RegExp(`(^|[^\\d:])${clock}(?!\\d|:)`).test(lower);
+        return new RegExp(`\\b${weekday.slice(0, 3)}`).test(lower) || new RegExp(`\\b${date}(st|nd|rd|th)\\b`).test(lower) || time;
+      });
+      if (mentioned.length === 1) return { slots: { consultAt: mentioned[0].iso }, answered: ["slot"] };
       const ordinal = lower.match(/\b(first|second|third|1st|2nd|3rd|[123])\b/)?.[1];
       const index = ordinal ? { first: 0, "1st": 0, "1": 0, second: 1, "2nd": 1, "2": 1, third: 2, "3rd": 2, "3": 2 }[ordinal] : undefined;
       if (index !== undefined && state.slots[index]) return { slots: { consultAt: state.slots[index].iso }, answered: ["slot"] };
@@ -421,7 +533,13 @@ export function respond(previous: ChatState, message: string, interpretation?: I
   // A question that parses as an answer to the current step ("Salt Lake County?") is an answer.
   const longEnough = current === "matter" || text.split(/\s+/).length >= 4;
   const unplaced = !faq && longEnough && isUnplacedQuestion(text) && (current === "matter" || parseStep(current, text, state) === null);
-  if (asksForLegalAdvice(text) || interpretation?.asksLegalAdvice || unplaced) {
+  // "Can I do Friday?" at the last step is about the calendar, not the law.
+  const otherTime =
+    current === "slot" && !asksForLegalAdvice(text) && !interpretation?.asksLegalAdvice && parseStep("slot", text, state) === null &&
+    /\b(mon|tues?|wed(nes)?|thur?s?|fri|satur|sun)(day)?\b|\b(morning|afternoon|evening|earlier|later|sooner|next week|this week|today|tomorrow|weekend|another|different|other) ?(day|time|date|slot)?\b|\d/i.test(text);
+  if (otherTime) {
+    replies.push("Those three are the times I can book from here. If none of them works, choose \"Call me instead\" and the firm will find a time with you.");
+  } else if (asksForLegalAdvice(text) || interpretation?.asksLegalAdvice || unplaced) {
     replies.push(NO_ADVICE_REPLY);
     guardrail = guardrail ?? "advice";
   } else if (faq) {
@@ -454,10 +572,11 @@ export function respond(previous: ChatState, message: string, interpretation?: I
     state.data.signals = heardSignals(state);
     state.answered.push("details");
   }
+  const noted = state.data.matterType && state.data.matterType !== "outside" ? overhear(text, state, current) : [];
   // Contact details offered early are kept, whatever the current question was.
   if (!state.answered.includes("contact")) {
     const email = text.match(EMAIL)?.[0];
-    const phone = text.match(PHONE)?.[0];
+    const phone = findPhone(text);
     if (email || phone) {
       state.data.email = email ?? null;
       state.data.phone = phone ?? null;
@@ -490,10 +609,28 @@ export function respond(previous: ChatState, message: string, interpretation?: I
     return { state, replies, suggestions: [], guardrail };
   }
 
+  const note = notedLine(noted, state.data);
+  if (note) replies.push(note);
+  if (state.data.state && state.data.state !== "Utah" && (noted.includes("location") || (current === "location" && answeredCurrent) || (current === "name" && parsed?.answered.includes("location")))) {
+    replies.push(LICENSED_ONLY_IN_UTAH);
+  }
+
   const prompt = promptFor(upcoming, state);
   if (answeredCurrent) replies.push(prompt.text);
+  else if (otherTime) return { state, replies, suggestions: prompt.suggestions, guardrail };
+  else if (current === "matter" && !replies.length && /^(hi|hello|hey|good (morning|afternoon|evening))\b[\s\w]{0,12}[.!]*$/i.test(text)) {
+    replies.push(`Hello. ${REASK.matter}`);
+  }
+  else if (current === "otherParty" && !replies.length && extractName(text) === null && /\b(husband|wife|spouse|partner|ex|brother|sister|mother|father|mom|dad|son|daughter|parent)\b/i.test(text)) {
+    replies.push("The firm checks names against its client list, so I need their first and last name. Or tell me there's no one else.");
+  }
   else if (current === "matter" && !replies.length && /^(something else|other|not sure|none of (these|those))\b/i.test(text)) {
     replies.push("No problem. In a few words, what is it about?");
+  }
+  else if (current === "matter" && !replies.length) {
+    replies.push(
+      `I couldn't match that to what the firm does. ${FIRM.name} handles divorce, custody and support, adoption, guardianship, wills, trusts and probate. If yours is one of those, pick it below or say it another way. If it isn't, the firm is probably not the right fit, and you can call ${FIRM.phone} to check.`,
+    );
   }
   else if (guardrail === "safety") replies.push(`When you are ready to carry on: ${REASK[upcoming]}`);
   else replies.push(replies.length ? `To get you booked: ${REASK[upcoming]}` : `Sorry, I didn't catch that. ${REASK[upcoming]}`);
@@ -516,10 +653,15 @@ function mountainOffsetHours(at: Date): number {
 
 const FIRM_TIME_ZONE = "America/Denver";
 
-/** Three weekday consultation times starting from the next business day, in the firm's local time. */
-export function offerSlots(now: Date): ConsultSlot[] {
-  const hours = [10, 14, 11];
-  const minutes = [0, 30, 0];
+/** The attorney's consultation times on any weekday, as [hour, minute] in the firm's local time. */
+const CONSULT_TIMES: [number, number][] = [[10, 0], [14, 30], [11, 0], [15, 30]];
+
+/**
+ * Three weekday consultation times starting from the next business day, in the firm's local time.
+ * `taken` holds the times already booked (ISO strings), so two people are never offered the same one.
+ */
+export function offerSlots(now: Date, taken: readonly string[] = []): ConsultSlot[] {
+  const booked = new Set(taken.map((iso) => new Date(iso).getTime()));
   const slots: ConsultSlot[] = [];
   // Work in the firm's calendar, so "tomorrow" is tomorrow in Salt Lake City.
   const day = new Date(now.getTime() - mountainOffsetHours(now) * 3600_000);
@@ -527,9 +669,14 @@ export function offerSlots(now: Date): ConsultSlot[] {
     day.setUTCDate(day.getUTCDate() + 1);
     const weekday = day.getUTCDay();
     if (weekday === 0 || weekday === 6) continue;
-    const i = slots.length;
     const noonUtc = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 19));
-    const at = new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), hours[i] + mountainOffsetHours(noonUtc), minutes[i]));
+    // Each day leads with a different time, so the three offers are spread across the day.
+    const i = slots.length;
+    const at = [...CONSULT_TIMES.slice(i), ...CONSULT_TIMES.slice(0, i)]
+      .map(([hour, minute]) => new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), hour + mountainOffsetHours(noonUtc), minute)))
+      .find((time) => !booked.has(time.getTime()));
+    // A fully booked day is skipped.
+    if (!at) continue;
     slots.push({ iso: at.toISOString(), label: formatSlot(at) });
   }
   return slots;

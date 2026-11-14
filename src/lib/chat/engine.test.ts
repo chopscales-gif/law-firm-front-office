@@ -91,7 +91,7 @@ describe("conversation", () => {
       urgency: "planning",
       signals: { realEstate: true },
       email: "dana.whitlock@example.test",
-      phone: "801-555-0188",
+      phone: "(801) 555-0188",
       source: "referral",
       consultAt: slots[1].iso,
       safetyConcern: false,
@@ -166,6 +166,13 @@ describe("conversation", () => {
     const { state } = run(["probate", "Tomas Vidal, you can reach me at tomas@example.test"]);
     expect(state.data.email).toBe("tomas@example.test");
     expect(state.answered).toContain("contact");
+  });
+
+  it("says what the firm handles when it cannot place the matter", () => {
+    expect(respond(startChat(slots).state, "I got a speeding ticket in Provo").state.status).toBe("outside");
+    const turn = respond(startChat(slots).state, "it's complicated");
+    expect(turn.replies[0]).toContain("wills, trusts and probate");
+    expect(turn.state.status).toBe("collecting");
   });
 
   it("re-asks when it cannot read an answer", () => {
@@ -266,5 +273,85 @@ describe("things a reviewer broke once", () => {
   it("offers slots at the same local time in summer and winter", () => {
     expect(offerSlots(new Date("2026-11-13T22:00:00Z"))[0]).toEqual({ iso: "2026-11-16T17:00:00.000Z", label: "Monday Nov 16, 10 am" });
     expect(offerSlots(new Date("2026-07-03T22:00:00Z"))[0]).toEqual({ iso: "2026-07-06T16:00:00.000Z", label: "Monday Jul 6, 10 am" });
+  });
+
+  it("never offers a consultation time that is already booked", () => {
+    const now = new Date("2026-11-13T22:00:00Z");
+    const [first, second, third] = offerSlots(now);
+    const next = offerSlots(now, [first.iso, second.iso]);
+    expect(next.map((slot) => slot.label)).toEqual(["Monday Nov 16, 2:30 pm", "Tuesday Nov 17, 11 am", "Wednesday Nov 18, 11 am"]);
+    expect(next.map((slot) => slot.iso)).not.toContain(first.iso);
+    expect(next[2]).toEqual(third);
+  });
+});
+
+describe("answers given before they are asked for", () => {
+  it("keeps a name, a county, urgency and a referral from the opening message", () => {
+    const first = respond(startChat(slots).state, "My name is Carl Jung, I live in Park City, and I need a trust for my cabin and my company. No rush. A friend referred me. carl@mail.example");
+    expect(first.state.data).toMatchObject({ name: "Carl Jung", state: "Utah", county: "Summit", urgency: "planning", source: "referral", email: "carl@mail.example" });
+    expect(first.replies).toContain("I've noted that you live in Summit County, that there's no rush and that you were referred.");
+    // The only things left to ask are who else is involved and when to meet.
+    expect(first.replies.at(-1)).toMatch(/^Thanks, Carl\. Is anyone else part of this/);
+    const second = respond(first.state, "no one else");
+    expect(second.replies.at(-1)).toMatch(/^Last step/);
+  });
+
+  it("keeps the other person's name when it comes with the matter", () => {
+    const { state, transcript } = run(["I want to divorce my husband John Smith. We have two kids and a house in Sandy.", "Mary Smith"]);
+    expect(state.data).toMatchObject({ name: "Mary Smith", adverseName: "John Smith" });
+    expect(transcript.join(" ")).not.toContain("What's his full name");
+    // "A house in Sandy" is where the house is, not necessarily where she lives.
+    expect(transcript.at(-1)).toMatch(/^Where do you live/);
+  });
+
+  it("does not ask how soon after being told about a hearing", () => {
+    const { state, transcript } = run(["I was served with divorce papers last week and there is a hearing in two weeks", "Gideon Marsh", "Elena Marsh", "Draper"]);
+    expect(state.data.urgency).toBe("deadline");
+    expect(transcript.join(" ")).not.toContain("How soon");
+  });
+
+  it("splits a name from whatever was typed with it", () => {
+    expect(run(["a will", "Dana Whitlock, Salt Lake County"]).state.data).toMatchObject({ name: "Dana Whitlock", county: "Salt Lake" });
+    expect(run(["a will", "Dana Whitlock, dana@mail.example"]).state.data).toMatchObject({ name: "Dana Whitlock", email: "dana@mail.example" });
+    expect(run(["a will", "Mary Smith, I live in Sandy"]).state.data).toMatchObject({ name: "Mary Smith", county: "Salt Lake" });
+  });
+
+  it.each(["Outside Utah", "Just planning ahead", "no one else", "There's a hearing", "Salt Lake County", "Online search", "Both"])(
+    "does not take %s for a person's name",
+    (message) => {
+      expect(run(["a will", message]).state.data.name).toBeUndefined();
+      expect(run(["divorce", "Dana Whitlock", message]).state.data.adverseName ?? null).toBeNull();
+    },
+  );
+
+  it("does not take the visitor's own name as the other party", () => {
+    expect(run(["a will", "Dana Whitlock", "Dana Whitlock"]).state.answered).not.toContain("otherParty");
+  });
+
+  it("reads 'no court date' as no deadline", () => {
+    expect(run(["a will", "Dana Whitlock", "just me", "Sandy", "There's no court date"]).state.data.urgency).toBe("planning");
+  });
+
+  it("books a time named by its day or its hour", () => {
+    const upTo = ["a will", "Dana Whitlock", "just me", "Sandy", "no rush", "neither", "dana@mail.example", "google"];
+    expect(run([...upTo, "Monday"]).state.data.consultAt).toBe(slots[0].iso);
+    expect(run([...upTo, "Tuesday at 2:30"]).state.data.consultAt).toBe(slots[1].iso);
+    expect(run([...upTo, "11 am works"]).state.data.consultAt).toBe(slots[2].iso);
+  });
+
+  it("explains the choice of times instead of refusing legal advice when asked for another day", () => {
+    const { state, transcript } = run(["a will", "Dana Whitlock", "just me", "Sandy", "no rush", "neither", "dana@mail.example", "google", "Can I do Friday?"]);
+    expect(state.status).toBe("collecting");
+    expect(transcript.at(-1)).toContain("Call me instead");
+    expect(transcript.at(-1)).not.toBe(NO_ADVICE_REPLY);
+  });
+
+  it("tells someone outside Utah where the firm is licensed, once", () => {
+    const { transcript } = run(["custody", "Priya Raman", "Tomas Raman", "Idaho", "soon"]);
+    expect(transcript.filter((line) => line.includes("licensed only in Utah"))).toHaveLength(1);
+  });
+
+  it("greets back instead of apologising", () => {
+    expect(run(["hello"]).transcript[0]).toMatch(/^Hello\. What kind of matter/);
   });
 });

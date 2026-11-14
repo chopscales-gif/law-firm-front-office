@@ -9,6 +9,7 @@ import { getDb } from "@/db/client";
 import { resetSandbox } from "@/db/sandbox";
 import { chatSessions, leads, type ChatMessage } from "@/db/schema";
 import { completedIntake, offerSlots, respond, startChat } from "@/lib/chat/engine";
+import { bookedConsultTimes } from "./queries";
 import { getCtx, sandboxIdFromCookie } from "./session";
 import {
   WorkflowError,
@@ -115,7 +116,7 @@ export async function sendChatAction(sessionId: string | null, text: string): Pr
       ? (await db.select().from(chatSessions).where(and(eq(chatSessions.id, parsed.data.sessionId), eq(chatSessions.sandboxId, sandboxId))))[0]
       : undefined;
     if (!session) {
-      const opening = startChat(offerSlots(now));
+      const opening = startChat(offerSlots(now, await bookedConsultTimes(ctx)));
       [session] = await db
         .insert(chatSessions)
         .values({

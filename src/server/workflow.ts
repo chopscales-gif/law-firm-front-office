@@ -398,7 +398,7 @@ async function recordSignature(ctx: Ctx, view: SigningView, kind: SignatureInput
   await ctx.db.insert(parties).values(partyRows);
 
   await queue(ctx, lead.id, [
-    ...signedMessages(lead, matterName, `/api/documents/${document.id}/pdf`),
+    ...signedMessages(lead, matterName),
     ...clioMessages(lead, matterName, ctx.now),
   ]);
   return { lead: signedLead, matterId };

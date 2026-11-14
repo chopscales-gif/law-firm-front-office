@@ -83,3 +83,6 @@ export function scoreLead(input: ScoringInput): LeadScore {
   const tier = area === "outside" ? "cool" : total >= 75 ? "hot" : total >= 50 ? "warm" : "cool";
   return { total, tier, factors };
 }
+
+/** What the firm sees instead of the internal tier name. */
+export const TIER_LABEL = { hot: "Strong fit", warm: "Good fit", cool: "Weak fit" } as const;

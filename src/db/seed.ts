@@ -86,13 +86,13 @@ export const SEED_MATTERS: SeedMatter[] = [
     ],
   },
   {
-    name: "Abernathy v. Wasatch Ridge: lease dispute over family home",
-    area: "family",
+    name: "Estate of Ruth Abernathy: probate",
+    area: "estate",
     status: "open",
     openedDaysAgo: 27,
     parties: [
       { name: "Jonathan Abernathy", role: "client", email: "j.abernathy@mail.example", phone: "(435) 555-0116" },
-      { name: "Wasatch Ridge Property Management, LLC", role: "opposing", kind: "organization", aliases: ["WRPM"] },
+      { name: "Wasatch Ridge Property Management, LLC", role: "related", kind: "organization", aliases: ["WRPM"] },
     ],
   },
   {
@@ -159,6 +159,12 @@ export const SEED_MATTERS: SeedMatter[] = [
 
 const DAY = 24 * 3600_000;
 
+/** Firms open files on working days: a date that lands on a weekend moves back to the Friday. */
+function weekday(date: Date): Date {
+  const day = new Date(date.getTime() - 7 * 3600_000).getUTCDay();
+  return new Date(date.getTime() - (day === 0 ? 2 : day === 6 ? 1 : 0) * DAY);
+}
+
 type SeedLead = {
   /** Hours before "now" that the inquiry arrived. */
   hoursAgo: number;
@@ -200,7 +206,7 @@ const SEED_LEADS: SeedLead[] = [
     intake: {
       matterType: "custody", name: "Daniel Park", adverseName: "Liz Park", relatedNames: [],
       state: "Utah", county: "Salt Lake", urgency: "soon", signals: { children: true },
-      email: "dan.park@mail.example", phone: "(801) 555-0133", source: "search", consultSlot: 0,
+      email: "dan.park@mail.example", phone: "(801) 555-0133", source: "search", consultSlot: null,
       description: "My ex-wife wants to change our custody arrangement and I need a lawyer.", safetyConcern: false,
     },
   },
@@ -224,7 +230,7 @@ const SEED_LEADS: SeedLead[] = [
       matterType: "will", name: "Marguerite Dufresne", adverseName: null, relatedNames: [],
       state: "Utah", county: "Davis", urgency: "planning", signals: { realEstate: true },
       email: "m.dufresne@mail.example", phone: null, source: "returning", consultSlot: 1,
-      description: "I'd like to update my will now that I've sold the house in Bountiful.", safetyConcern: false,
+      description: "I'd like to update my will now that I've bought a house in Bountiful.", safetyConcern: false,
     },
   },
   {
@@ -273,7 +279,7 @@ export async function seedSandbox(ctx: Ctx): Promise<void> {
     name: m.name,
     practiceArea: m.area,
     status: m.status,
-    openedOn: new Date(now.getTime() - m.openedDaysAgo * DAY),
+    openedOn: weekday(new Date(now.getTime() - m.openedDaysAgo * DAY)),
     leadId: null,
   }));
   await db.insert(matters).values(matterRows);
@@ -293,12 +299,15 @@ export async function seedSandbox(ctx: Ctx): Promise<void> {
     ),
   );
 
-  const slots = offerSlots(now);
+  // Each seeded inquiry is offered the times still free when it arrives, like a real one.
+  const taken: string[] = [];
   for (const seed of SEED_LEADS) {
     const arrived = new Date(now.getTime() - seed.hoursAgo * 3600_000);
     const at = (minutesLater: number): Ctx => ({ db, sandboxId, now: new Date(Math.min(now.getTime(), arrived.getTime() + minutesLater * 60_000)) });
     const { consultSlot, ...rest } = seed.intake;
-    const lead = await createLead(at(0), { ...rest, consultAt: consultSlot === null ? null : slots[consultSlot].iso }, seed.channel);
+    const consultAt = consultSlot === null ? null : offerSlots(now, taken)[consultSlot].iso;
+    if (consultAt) taken.push(consultAt);
+    const lead = await createLead(at(0), { ...rest, consultAt }, seed.channel);
     if (seed.stage === "new") continue;
 
     await checkLeadForConflicts(at(35), lead.id);
