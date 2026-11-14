@@ -21,7 +21,7 @@ export default async function MattersPage() {
         would be read from the practice management system. When a client signs an engagement letter here, the new matter joins the list.
       </PageHeader>
 
-      <ul className="border-t-2 border-plum">
+      <ul className="border-t-2 border-petrol">
         {matters.map((matter) => (
           <li key={matter.id} className="grid gap-x-10 gap-y-3 border-b border-line py-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <div>

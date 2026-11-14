@@ -41,7 +41,7 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
         business names written differently. It finds matches for a lawyer to assess. It does not decide whether a conflict exists.
       </PageHeader>
 
-      <form action="/staff/conflicts" className="grid max-w-[60rem] gap-4 border-y-2 border-plum py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
+      <form action="/staff/conflicts" className="grid max-w-[60rem] gap-4 border-y-2 border-petrol py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
         <div>
           <label htmlFor="name" className="block font-semibold">
             Name of a person or business

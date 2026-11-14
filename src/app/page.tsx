@@ -28,9 +28,9 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* The spine: the firm speaking in its own voice. It carries the same plum as the rail on the firm side. */}
-      <div className="on-dark relative isolate flex flex-col overflow-hidden bg-plum text-white">
-        <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-plum-deep lg:block">
+      {/* The spine: the firm speaking in its own voice. It carries the same petrol as the rail on the firm side. */}
+      <div className="on-dark relative isolate flex flex-col overflow-hidden bg-petrol text-white">
+        <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-petrol-deep lg:block">
           &amp;
         </span>
         <header className="flex items-baseline justify-between gap-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
@@ -104,7 +104,7 @@ function FirmDetails({ dark = false }: { dark?: boolean }) {
         <ol className="mt-3 space-y-3">
           {NEXT_STEPS.map((step, i) => (
             <li key={step} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2">
-              <span className={`font-serif text-lg font-semibold leading-snug ${dark ? "text-rose-pale" : "text-rose"}`}>{i + 1}</span>
+              <span className={`font-serif text-lg font-semibold leading-snug ${dark ? "text-lake-pale" : "text-lake"}`}>{i + 1}</span>
               <span className="leading-snug">{step}</span>
             </li>
           ))}

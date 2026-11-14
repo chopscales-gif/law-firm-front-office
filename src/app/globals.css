@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 /*
- * Alder & Finch. Colours come from the Great Salt Lake at dusk: the plum of the
- * Wasatch in shadow, the salt crust, the rose of the lake's north arm.
+ * Alder & Finch. Colours come from the Great Salt Lake on a clear day: the deep petrol of
+ * open water, the salt crust, the lighter teal of the shallows.
  */
 @theme inline {
-  --color-ink: #1e1823;
-  --color-plum: #45233f;
-  --color-plum-deep: #331930;
-  --color-rose: #a03a62;
-  --color-rose-tint: #f4e1e9;
-  --color-rose-pale: #f0b8cc;
-  --color-salt: #f5f3f6;
+  --color-ink: #14212a;
+  --color-petrol: #12384a;
+  --color-petrol-deep: #0b2836;
+  --color-lake: #17667a;
+  --color-lake-tint: #dcecef;
+  --color-lake-pale: #a9d6df;
+  --color-salt: #f2f5f5;
   --color-surface: #ffffff;
-  --color-line: #dcd6df;
-  --color-muted: #5a5566;
+  --color-line: #d2dadd;
+  --color-muted: #4d5a62;
   --color-flag: #b3261e;
   --color-flag-tint: #fbe9e7;
   --color-amber: #8a5a00;
   --color-amber-tint: #fbf0d5;
-  --color-demo: #17131b;
+  --color-demo: #10171b;
   --font-serif: var(--font-besley), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
@@ -31,7 +31,7 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-rose);
+  outline: 3px solid var(--color-lake);
   outline-offset: 2px;
 }
 
@@ -61,19 +61,19 @@ body {
     opacity: 0.55;
   }
   .btn-primary {
-    background: var(--color-plum);
+    background: var(--color-petrol);
     color: #ffffff;
   }
   .btn-primary:hover:not(:disabled) {
-    background: var(--color-plum-deep);
+    background: var(--color-petrol-deep);
   }
   .btn-quiet {
     background: var(--color-surface);
-    border-color: var(--color-plum);
-    color: var(--color-plum);
+    border-color: var(--color-petrol);
+    color: var(--color-petrol);
   }
   .btn-quiet:hover:not(:disabled) {
-    background: var(--color-rose-tint);
+    background: var(--color-lake-tint);
   }
   .btn-danger {
     background: var(--color-surface);
@@ -88,24 +88,24 @@ body {
     width: 100%;
     min-height: 2.75rem;
     padding: 0.5rem 0.75rem;
-    border: 1.5px solid #8d8698;
+    border: 1.5px solid #7c888e;
     border-radius: 0.25rem;
     background: var(--color-surface);
     font-size: 1rem;
   }
   .field::placeholder {
-    color: #6b6676;
+    color: #5d696f;
   }
 
   .link {
-    color: var(--color-rose);
+    color: var(--color-lake);
     font-weight: 600;
     text-decoration: underline;
     text-decoration-thickness: 1.5px;
     text-underline-offset: 3px;
   }
   .link:hover {
-    color: var(--color-plum);
+    color: var(--color-petrol);
   }
 
   /*
@@ -122,7 +122,7 @@ body {
   .letter {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
-    box-shadow: 0 1px 0 var(--color-line), 0 18px 40px -28px rgba(69, 35, 63, 0.55);
+    box-shadow: 0 1px 0 var(--color-line), 0 18px 40px -28px rgba(18, 56, 74, 0.5);
     font-family: var(--font-serif);
     font-size: 1.0625rem;
     line-height: 1.7;

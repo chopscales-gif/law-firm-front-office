@@ -28,7 +28,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
 
   const tab = (isActive: boolean) =>
     `inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-[3px] px-1 font-semibold ${
-      isActive ? "border-plum text-plum" : "border-transparent text-muted hover:border-line hover:text-ink"
+      isActive ? "border-petrol text-petrol" : "border-transparent text-muted hover:border-line hover:text-ink"
     }`;
   const COLUMNS = "md:grid-cols-[minmax(0,1.5fr)_9.5rem_minmax(0,1fr)_11.5rem]";
   const consult = (lead: (typeof all)[number]) =>

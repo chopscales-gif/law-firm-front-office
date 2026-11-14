@@ -10,7 +10,7 @@ const ITEMS = [
   { href: "/staff/outbox", label: "Outbox", short: "Outbox" },
 ];
 
-/** The plum rail on wide screens, the same spine the client side opens with. A bottom bar on phones. */
+/** The petrol rail on wide screens, the same spine the client side opens with. A bottom bar on phones. */
 export function StaffNav({ outboxCount }: { outboxCount: number }) {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/staff" ? pathname === "/staff" || pathname.startsWith("/staff/leads") : pathname.startsWith(href));
@@ -18,7 +18,7 @@ export function StaffNav({ outboxCount }: { outboxCount: number }) {
   return (
     <nav
       aria-label="Firm workspace"
-      className="on-dark fixed inset-x-0 bottom-0 z-10 flex bg-plum text-white lg:static lg:w-60 lg:shrink-0 lg:flex-col lg:px-4 lg:py-8"
+      className="on-dark fixed inset-x-0 bottom-0 z-10 flex bg-petrol text-white lg:static lg:w-60 lg:shrink-0 lg:flex-col lg:px-4 lg:py-8"
     >
       <p className="mb-8 hidden px-3 font-serif text-[1.375rem] font-semibold leading-tight lg:block">
         Alder &amp; Finch
@@ -33,8 +33,8 @@ export function StaffNav({ outboxCount }: { outboxCount: number }) {
             aria-current={active ? "page" : undefined}
             className={`flex min-h-14 flex-1 items-center justify-center gap-2 px-2 text-[0.9375rem] font-semibold lg:min-h-11 lg:flex-none lg:justify-between lg:rounded-sm lg:px-3 lg:text-base ${
               active
-                ? "bg-plum-deep shadow-[inset_0_3px_0_var(--color-rose-pale)] lg:shadow-[inset_3px_0_0_var(--color-rose-pale)]"
-                : "text-white/80 hover:bg-plum-deep/60 hover:text-white"
+                ? "bg-petrol-deep shadow-[inset_0_3px_0_var(--color-lake-pale)] lg:shadow-[inset_3px_0_0_var(--color-lake-pale)]"
+                : "text-white/80 hover:bg-petrol-deep/60 hover:text-white"
             }`}
           >
             <span className="lg:hidden">{item.short}</span>

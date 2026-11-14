@@ -3,7 +3,7 @@ import type { ConflictHit, Level } from "@/lib/conflicts/check";
 const LEVEL: Record<Level, { label: string; bar: string; text: string }> = {
   conflict: { label: "Possible conflict", bar: "border-flag", text: "text-flag" },
   review: { label: "Needs review", bar: "border-amber", text: "text-amber" },
-  info: { label: "For information", bar: "border-[#8d8698]", text: "text-muted" },
+  info: { label: "For information", bar: "border-[#7c888e]", text: "text-muted" },
 };
 
 const SUBJECT_ROLE = { prospect: "Prospective client", adverse: "Other side", related: "Also involved" };

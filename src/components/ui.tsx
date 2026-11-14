@@ -5,11 +5,11 @@ import { TIER_LABEL } from "@/lib/scoring";
 /** A stage is written out in words. The mark beside it fills in as the inquiry moves along. */
 const STATUS: Record<LeadStatus, { label: string; mark: string; text: string }> = {
   new: { label: "New", mark: "border-2 border-ink", text: "text-ink" },
-  cleared: { label: "Cleared", mark: "border-2 border-plum bg-rose-pale", text: "text-ink" },
+  cleared: { label: "Cleared", mark: "border-2 border-petrol bg-lake-pale", text: "text-ink" },
   flagged: { label: "Held for review", mark: "rounded-none bg-amber", text: "text-amber" },
-  declined: { label: "Declined", mark: "bg-[#8d8698]", text: "text-muted" },
-  letter_sent: { label: "Awaiting signature", mark: "border-2 border-plum bg-[linear-gradient(90deg,var(--color-plum)_50%,transparent_50%)]", text: "text-ink" },
-  signed: { label: "Signed", mark: "bg-plum", text: "text-plum" },
+  declined: { label: "Declined", mark: "bg-[#7c888e]", text: "text-muted" },
+  letter_sent: { label: "Awaiting signature", mark: "border-2 border-petrol bg-[linear-gradient(90deg,var(--color-petrol)_50%,transparent_50%)]", text: "text-ink" },
+  signed: { label: "Signed", mark: "bg-petrol", text: "text-petrol" },
 };
 
 export function StatusChip({ status }: { status: LeadStatus }) {
@@ -25,7 +25,7 @@ export function StatusChip({ status }: { status: LeadStatus }) {
 const OUTCOME: Record<ConflictOutcome, { label: string; className: string }> = {
   conflict: { label: "Possible conflict", className: "bg-flag text-white" },
   review: { label: "Needs review", className: "bg-amber-tint text-amber shadow-[inset_0_0_0_1.5px_var(--color-amber)]" },
-  clear: { label: "Nothing found", className: "bg-rose-tint text-plum-deep shadow-[inset_0_0_0_1.5px_var(--color-plum)]" },
+  clear: { label: "Nothing found", className: "bg-lake-tint text-petrol-deep shadow-[inset_0_0_0_1.5px_var(--color-petrol)]" },
 };
 
 export function OutcomeChip({ outcome }: { outcome: ConflictOutcome }) {
@@ -37,7 +37,7 @@ export function OutcomeChip({ outcome }: { outcome: ConflictOutcome }) {
 export function Score({ value, tier, size = "sm" }: { value: number; tier: "hot" | "warm" | "cool"; size?: "sm" | "lg" }) {
   return (
     <span className="inline-flex items-baseline gap-2 whitespace-nowrap">
-      <span className={`font-serif font-semibold tabular-nums ${size === "lg" ? "text-5xl text-plum" : "text-[1.375rem]"}`}>{value}</span>
+      <span className={`font-serif font-semibold tabular-nums ${size === "lg" ? "text-5xl text-petrol" : "text-[1.375rem]"}`}>{value}</span>
       <span className="text-[0.9375rem] text-muted">{TIER_LABEL[tier]}</span>
     </span>
   );

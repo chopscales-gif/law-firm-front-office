@@ -5,8 +5,8 @@ import { FIRM } from "@/lib/intake";
 export function Letter({ blocks, children }: { blocks: Block[]; children?: React.ReactNode }) {
   return (
     <article className="letter px-6 py-8 sm:px-14 sm:py-14">
-      <header className="border-b-2 border-plum pb-3">
-        <p className="font-serif text-2xl font-semibold leading-none text-plum">{FIRM.name}</p>
+      <header className="border-b-2 border-petrol pb-3">
+        <p className="font-serif text-2xl font-semibold leading-none text-petrol">{FIRM.name}</p>
         <p className="mt-1.5 text-[0.9375rem] text-muted">
           {FIRM.address}. <span className="whitespace-nowrap">{FIRM.phone}</span>
         </p>

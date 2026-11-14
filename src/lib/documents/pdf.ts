@@ -21,9 +21,9 @@ export type LetterPdfInput = {
 };
 
 const PAGE = { width: 612, height: 792, marginX: 72, marginTop: 72, marginBottom: 80 };
-const INK = rgb(0.118, 0.094, 0.137);
-const MUTED = rgb(0.353, 0.333, 0.4);
-const PLUM = rgb(0.27, 0.137, 0.247);
+const INK = rgb(0.078, 0.129, 0.165);
+const MUTED = rgb(0.302, 0.353, 0.384);
+const PETROL = rgb(0.071, 0.22, 0.29);
 
 /** The built-in PDF fonts only cover Windows-1252, so anything else is swapped for a close ASCII form. */
 function safe(text: string): string {
@@ -86,11 +86,11 @@ export async function buildLetterPdf(input: LetterPdfInput): Promise<Uint8Array>
     footer(page);
     y = PAGE.height - PAGE.marginTop;
     if (letterhead) {
-      page.drawText(FIRM.name, { x: PAGE.marginX, y, size: 20, font: serifBold, color: PLUM });
+      page.drawText(FIRM.name, { x: PAGE.marginX, y, size: 20, font: serifBold, color: PETROL });
       y -= 16;
       page.drawText(safe(`${FIRM.address}  |  ${FIRM.phone}  |  ${FIRM.email}`), { x: PAGE.marginX, y, size: 8.5, font: sans, color: MUTED });
       y -= 10;
-      page.drawLine({ start: { x: PAGE.marginX, y }, end: { x: PAGE.width - PAGE.marginX, y }, thickness: 0.75, color: PLUM });
+      page.drawLine({ start: { x: PAGE.marginX, y }, end: { x: PAGE.width - PAGE.marginX, y }, thickness: 0.75, color: PETROL });
       y -= 28;
     }
   };

@@ -23,9 +23,9 @@ export default async function OutboxPage() {
       {messages.length === 0 ? (
         <p className="py-8 text-muted">Nothing has been sent yet.</p>
       ) : (
-        <ul className="max-w-[60rem] border-t-2 border-plum">
+        <ul className="max-w-[60rem] border-t-2 border-petrol">
           {messages.map((message) => (
-            <li key={message.id} id={message.id} className="scroll-mt-6 border-b border-line py-5 target:bg-surface target:px-4 target:shadow-[inset_4px_0_0_var(--color-rose)]">
+            <li key={message.id} id={message.id} className="scroll-mt-6 border-b border-line py-5 target:bg-surface target:px-4 target:shadow-[inset_4px_0_0_var(--color-lake)]">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[0.9375rem] text-muted">
                 <span>
                   <span className="font-semibold text-ink">{CHANNEL[message.channel]}</span> to {message.recipient}

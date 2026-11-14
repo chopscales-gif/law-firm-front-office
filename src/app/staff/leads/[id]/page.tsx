@@ -61,7 +61,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
       <Link href="/staff" className="link inline-flex min-h-11 items-center lg:min-h-0">
         Back to inquiries
       </Link>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b-2 border-plum pb-5">
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b-2 border-petrol pb-5">
         <div>
           <h1 className="font-serif text-[2.75rem] font-medium leading-[1.05] tracking-[-0.015em]">{lead.name}</h1>
           <p className="mt-2 text-muted">
@@ -81,7 +81,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
         <ol>
           <Step n={1} title="Intake" state="done" summary={`Scored ${lead.score} of 100`}>
             {lead.description && (
-              <blockquote className="max-w-[58ch] border-l-4 border-rose-pale pl-4 font-serif text-xl leading-relaxed">&ldquo;{lead.description}&rdquo;</blockquote>
+              <blockquote className="max-w-[58ch] border-l-4 border-lake-pale pl-4 font-serif text-xl leading-relaxed">&ldquo;{lead.description}&rdquo;</blockquote>
             )}
             <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 2xl:grid-cols-3">
               {facts.map(([label, value]) => (
@@ -105,7 +105,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
                       {factor.points} of {factor.max}
                     </span>
                     <span className="col-span-2 h-1.5 overflow-hidden bg-line">
-                      <span className="block h-full bg-rose" style={{ width: `${(factor.points / factor.max) * 100}%` }} />
+                      <span className="block h-full bg-lake" style={{ width: `${(factor.points / factor.max) * 100}%` }} />
                     </span>
                     <span className="col-span-2 text-[0.9375rem] leading-snug text-muted">{factor.detail}</span>
                   </li>
@@ -287,9 +287,9 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
 }
 
 const MARKER: Record<StepState, string> = {
-  done: "border-plum bg-plum text-white",
-  current: "border-rose bg-surface text-rose shadow-[0_0_0_4px_var(--color-rose-tint)]",
-  waiting: "border-[#8d8698] bg-salt text-muted",
+  done: "border-petrol bg-petrol text-white",
+  current: "border-lake bg-surface text-lake shadow-[0_0_0_4px_var(--color-lake-tint)]",
+  waiting: "border-[#7c888e] bg-salt text-muted",
   skipped: "border-line bg-salt text-muted",
 };
 
@@ -298,7 +298,7 @@ function Step(props: { n: number; title: string; state: StepState; summary: stri
   const open = state === "done" || state === "current";
   return (
     <li className="relative grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-4">
-      {!last && <span aria-hidden className={`absolute bottom-0 left-[1.0625rem] top-9 w-0.5 ${state === "done" ? "bg-plum" : "bg-line"}`} />}
+      {!last && <span aria-hidden className={`absolute bottom-0 left-[1.0625rem] top-9 w-0.5 ${state === "done" ? "bg-petrol" : "bg-line"}`} />}
       <span className={`relative z-[1] flex size-9 items-center justify-center rounded-full border-2 font-serif font-semibold ${MARKER[state]}`}>{n}</span>
       <div className={last ? "" : "pb-10"}>
         <h2 className={`flex min-h-9 flex-wrap items-baseline gap-x-3 pt-1 ${open ? "" : "text-muted"}`}>

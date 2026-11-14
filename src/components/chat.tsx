@@ -124,7 +124,7 @@ export function Chat({ opening, openingSuggestions, disclaimer, scenarios }: Pro
         <header className="flex items-end justify-between gap-3 pb-2.5">
           <div>
             <h2 className="font-serif text-[1.75rem] font-medium leading-tight tracking-[-0.01em]">Start your inquiry</h2>
-            <p className="mt-0.5 font-semibold text-plum">Automated intake assistant. Not a lawyer.</p>
+            <p className="mt-0.5 font-semibold text-petrol">Automated intake assistant. Not a lawyer.</p>
           </div>
           <button type="button" onClick={restart} className="btn btn-quiet shrink-0">
             Start over
@@ -132,7 +132,7 @@ export function Chat({ opening, openingSuggestions, disclaimer, scenarios }: Pro
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl rounded-b border border-line bg-surface">
-          <p className="border-b border-rose-pale bg-rose-tint px-4 py-2.5 text-[0.9375rem] leading-snug text-plum-deep">{disclaimer}</p>
+          <p className="border-b border-lake-pale bg-lake-tint px-4 py-2.5 text-[0.9375rem] leading-snug text-petrol-deep">{disclaimer}</p>
 
           <div ref={log} role="log" aria-live="polite" className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.map((message, i) => (
@@ -144,7 +144,7 @@ export function Chat({ opening, openingSuggestions, disclaimer, scenarios }: Pro
                 )}
                 <p
                   className={`max-w-[85%] px-4 py-2.5 leading-relaxed sm:max-w-[34rem] ${
-                    message.role === "visitor" ? "rounded-2xl rounded-br-sm bg-plum text-white" : "rounded-2xl rounded-bl-sm bg-salt text-ink"
+                    message.role === "visitor" ? "rounded-2xl rounded-br-sm bg-petrol text-white" : "rounded-2xl rounded-bl-sm bg-salt text-ink"
                   }`}
                 >
                   {message.text}
@@ -177,7 +177,7 @@ export function Chat({ opening, openingSuggestions, disclaimer, scenarios }: Pro
                   type="button"
                   disabled={busy}
                   onClick={() => void send(suggestion)}
-                  className="min-h-11 cursor-pointer rounded-full border-[1.5px] border-plum/45 bg-surface px-4 text-[0.9375rem] font-semibold text-plum hover:border-plum hover:bg-rose-tint disabled:opacity-50"
+                  className="min-h-11 cursor-pointer rounded-full border-[1.5px] border-petrol/45 bg-surface px-4 text-[0.9375rem] font-semibold text-petrol hover:border-petrol hover:bg-lake-tint disabled:opacity-50"
                 >
                   {suggestion}
                 </button>
