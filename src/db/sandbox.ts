@@ -1,9 +1,13 @@
-import { eq, lt } from "drizzle-orm";
+import { asc, count, eq, inArray, lt } from "drizzle-orm";
 import type { Db } from "./client";
 import { sandboxes } from "./schema";
 import { seedSandbox } from "./seed";
 
 const SANDBOX_LIFETIME_MS = 48 * 3600_000;
+/** The most sandboxes kept at once. Past this, the oldest make room for new visitors. */
+export const MAX_SANDBOXES = 300;
+/** Housekeeping removes at most this many per new visitor, so nobody's first page waits on a big clean-up. */
+const PURGE_BATCH = 20;
 
 /**
  * Makes sure this visitor has a seeded sandbox. Safe to call on every request:
@@ -20,8 +24,27 @@ export async function ensureSandbox(db: Db, sandboxId: string, now = new Date())
     if (inserted.length) await seedSandbox({ db: tx as unknown as Db, sandboxId, now });
   });
 
-  // Housekeeping piggybacks on new visitors, so no scheduled job is needed.
-  await db.delete(sandboxes).where(lt(sandboxes.createdAt, new Date(now.getTime() - SANDBOX_LIFETIME_MS)));
+  await purge(db, sandboxId, now);
+}
+
+/**
+ * Housekeeping piggybacks on new visitors, so no scheduled job is needed.
+ * Removes sandboxes past their lifetime, then enforces the cap, which bounds
+ * the size of the database however many visitors (or scripts) turn up.
+ */
+async function purge(db: Db, keep: string, now: Date): Promise<void> {
+  const remove = async (ids: { id: string }[]) => {
+    const others = ids.map((row) => row.id).filter((id) => id !== keep);
+    if (others.length) await db.delete(sandboxes).where(inArray(sandboxes.id, others));
+  };
+
+  const expired = new Date(now.getTime() - SANDBOX_LIFETIME_MS);
+  await remove(await db.select({ id: sandboxes.id }).from(sandboxes).where(lt(sandboxes.createdAt, expired)).orderBy(asc(sandboxes.createdAt)).limit(PURGE_BATCH));
+
+  const [{ total }] = await db.select({ total: count() }).from(sandboxes);
+  if (total > MAX_SANDBOXES) {
+    await remove(await db.select({ id: sandboxes.id }).from(sandboxes).orderBy(asc(sandboxes.createdAt)).limit(Math.min(total - MAX_SANDBOXES, PURGE_BATCH)));
+  }
 }
 
 export async function resetSandbox(db: Db, sandboxId: string, now = new Date()): Promise<void> {
