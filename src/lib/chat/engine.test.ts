@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyMatter, completedIntake, extractName, offerSlots, respond, startChat, type ChatState } from "./engine";
+import { classifyMatter, completedIntake, extractName, listen, offerSlots, respond, startChat, type ChatState } from "./engine";
 import { asksForLegalAdvice, mentionsSafetyRisk, NO_ADVICE_REPLY, SELF_HARM_REPLY } from "./guardrail";
 
 const slots = offerSlots(new Date("2026-11-13T18:00:00Z"));
@@ -96,6 +96,34 @@ describe("conversation", () => {
       consultAt: slots[1].iso,
       safetyConcern: false,
     });
+  });
+
+  it("does not ask again for what the visitor already said", () => {
+    const opening = respond(startChat(slots).state, "My husband and I need wills and a trust for our house");
+    expect(opening.state.heard).toMatchObject({ relation: "husband", realEstate: true });
+    const named = respond(opening.state, "Dana Whitlock");
+    expect(named.replies.at(-1)).toContain("You mentioned your husband. What's his full name?");
+    let turn = named;
+    for (const message of ["Owen Whitlock", "Salt Lake County", "Just planning ahead"]) turn = respond(turn.state, message);
+    const { state } = turn;
+    expect(state.data.relatedNames).toEqual(["Owen Whitlock"]);
+    expect(turn.replies.at(-1)).toBe("You mentioned a home. Is a business involved as well?");
+    expect(turn.suggestions).toEqual(["Yes, a business too", "No, just the home"]);
+    expect(respond(state, "No, just the home").state.data.signals).toEqual({ realEstate: true });
+    expect(respond(state, "no").state.data.signals).toEqual({ realEstate: true });
+    expect(respond(state, "Yes").state.data.signals).toEqual({ realEstate: true, business: true });
+  });
+
+  it("skips the details question when both parts have come up", () => {
+    const { state, transcript } = run(["I need a divorce. We have two kids and a house", "Marcus Bell", "Kate Reyes", "Salt Lake County", "Within a month or two"]);
+    expect(state.data.signals).toEqual({ children: true, realEstate: true });
+    expect(transcript.at(-1)).toContain("best email or phone");
+  });
+
+  it("does not take a denial or a surname as a mention", () => {
+    expect(listen("We need a will. We don't have kids, but we own a cabin")).toEqual({ realEstate: true });
+    const { state } = run(["A will or trust", "Jim House"]);
+    expect(state.heard?.realEstate).toBeUndefined();
   });
 
   it("records the other side in a family matter as adverse", () => {

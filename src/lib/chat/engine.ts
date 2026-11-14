@@ -24,7 +24,11 @@ export type ChatState = {
   status: "collecting" | "complete" | "outside";
   /** Consultation times offered to this visitor, fixed when the chat starts. */
   slots: ConsultSlot[];
+  /** What the visitor has said in passing, so the assistant does not ask for it again. */
+  heard?: Heard;
 };
+
+export type Heard = { relation?: string; children?: boolean; realEstate?: boolean; business?: boolean };
 
 export type ChatTurn = {
   state: ChatState;
@@ -89,6 +93,45 @@ export function classifyMatter(text: string): MatterType | null {
   const lower = text.toLowerCase();
   for (const [pattern, type] of MATTER_KEYWORDS) if (pattern.test(lower)) return type;
   return null;
+}
+
+const NEGATED = /\b(no|not|never|without|don'?t|doesn'?t|didn'?t|isn'?t|aren'?t|haven'?t|hasn'?t)\b/;
+
+/**
+ * Picks up facts a visitor mentions before they are asked: "my husband and I
+ * need a trust for our house" names a spouse and a home. A clause that denies
+ * something ("we don't have kids") is not taken as mentioning it.
+ */
+export function listen(text: string): Heard {
+  const heard: Heard = {};
+  for (const clause of text.toLowerCase().split(/[.;!?,]|\bbut\b/)) {
+    const relation = clause.match(/\b(?:my|our) (husband|wife|spouse|partner|ex-husband|ex-wife|ex|fiancee?|co-?parent)\b/)?.[1];
+    if (relation && !heard.relation) heard.relation = relation;
+    if (NEGATED.test(clause)) continue;
+    if (/\b(kids?|child|children|sons?|daughters?)\b/.test(clause)) heard.children = true;
+    if (/\b(home|house|condo|cabin)\b/.test(clause)) heard.realEstate = true;
+    if (/\b(business|company|llc)\b/.test(clause)) heard.business = true;
+  }
+  return heard;
+}
+
+type Signal = "children" | "realEstate" | "business";
+const SIGNAL_WORDS: Record<Signal, { a: string; the: string }> = {
+  children: { a: "children", the: "the children" },
+  realEstate: { a: "a home", the: "the home" },
+  business: { a: "a business", the: "a business" },
+};
+
+/** The two things the details question asks about, split into those already mentioned and those not. */
+function detailsFor(state: ChatState): { known: Signal[]; missing: Signal[] } {
+  const family = state.data.matterType !== undefined && areaOf(state.data.matterType) === "family";
+  const pair: Signal[] = family ? ["children", "realEstate"] : ["realEstate", "business"];
+  return { known: pair.filter((signal) => state.heard?.[signal]), missing: pair.filter((signal) => !state.heard?.[signal]) };
+}
+
+function heardSignals(state: ChatState): Partial<Record<Signal, true>> {
+  const { children, realEstate, business } = state.heard ?? {};
+  return { ...(children && { children }), ...(realEstate && { realEstate }), ...(business && { business }) };
 }
 
 const EMAIL = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
@@ -192,13 +235,19 @@ function parseStep(step: Step, text: string, state: ChatState): Interpretation |
       const children = /\b(kids?|child\w*|son|daughter|minor)\b/.test(lower);
       const realEstate = /\b(home|house|property|real estate|land|condo|cabin)\b/.test(lower);
       const business = /\b(business|company|llc|practice|shop|firm)\b/.test(lower);
+      // After "You mentioned a home. Is a business involved as well?", a bare yes means the business.
+      const { known, missing } = detailsFor(state);
+      if (known.length === 1 && /^(yes|yeah|yep|it is|there is)\b/.test(lower) && !children && !realEstate && !business) {
+        return { slots: { signals: { ...heardSignals(state), [missing[0]]: true } }, answered: ["details"] };
+      }
       if (!neither && !both && !children && !realEstate && !business) return null;
-      const signals = neither
+      const said = neither
         ? {}
         : both
           ? family ? { children: true, realEstate: true } : { realEstate: true, business: true }
           : { ...(children && { children }), ...(realEstate && { realEstate }), ...(business && { business }) };
-      return { slots: { signals }, answered: ["details"] };
+      // "Neither" answers the question that was asked. What was mentioned earlier still stands.
+      return { slots: { signals: { ...heardSignals(state), ...said } }, answered: ["details"] };
     }
     case "contact": {
       const email = text.match(EMAIL)?.[0] ?? null;
@@ -241,7 +290,13 @@ export function promptFor(step: Step, state: ChatState): { text: string; suggest
       };
     case "name":
       return { text: "Thanks. What's your full name?", suggestions: [] };
-    case "otherParty":
+    case "otherParty": {
+      const relation = state.heard?.relation;
+      if (relation) {
+        const whose = /husband/.test(relation) ? "his" : /wife/.test(relation) ? "her" : "their";
+        const why = family ? "I need it so the firm can check it doesn't already represent them." : "The firm checks every name for conflicts of interest.";
+        return { text: `Thanks, ${firstName(state)}. You mentioned your ${relation}. What's ${whose} full name? ${why}`, suggestions: [] };
+      }
       return family
         ? {
             text: `Thanks, ${firstName(state)}. Who is the other person involved, such as your spouse or the other parent? I need their full name so the firm can check it doesn't already represent them.`,
@@ -251,6 +306,7 @@ export function promptFor(step: Step, state: ChatState): { text: string; suggest
             text: `Thanks, ${firstName(state)}. Is anyone else part of this, such as a spouse or a co-owner? Full names let the firm check for conflicts of interest.`,
             suggestions: ["Just me"],
           };
+    }
     case "location":
       return {
         text: "Where do you live? The firm is licensed in Utah.",
@@ -261,10 +317,19 @@ export function promptFor(step: Step, state: ChatState): { text: string; suggest
         text: "How soon do you need to move on this?",
         suggestions: ["There's a court date or deadline", "Within a month or two", "Just planning ahead"],
       };
-    case "details":
+    case "details": {
+      const { known, missing } = detailsFor(state);
+      if (known.length === 1) {
+        const [has, lacks] = [SIGNAL_WORDS[known[0]], SIGNAL_WORDS[missing[0]]];
+        return {
+          text: `You mentioned ${has.a}. ${lacks.a === "children" ? "Are children" : `Is ${lacks.a}`} involved as well?`,
+          suggestions: [`Yes, ${lacks.a} too`, `No, just ${has.the}`],
+        };
+      }
       return family
         ? { text: "Are children or a home involved?", suggestions: ["Children", "A home", "Both", "Neither"] }
         : { text: "Does this involve a home or a business?", suggestions: ["A home", "A business", "Both", "Neither"] };
+    }
     case "contact":
       return { text: "What's the best email or phone number to reach you? Either one works, and both is better.", suggestions: [] };
     case "source":
@@ -376,9 +441,18 @@ export function respond(previous: ChatState, message: string, interpretation?: I
     parsed = rest ? parseStep(current, rest, state) : null;
   } else parsed = null;
 
+  // Read before the answer is parsed, so "Neither" keeps what was mentioned in this same message too.
+  // Names, contact details and times are not listened to: "Jim House" does not own a home.
+  if (!["name", "otherParty", "contact", "slot"].includes(current)) state.heard = { ...listen(text), ...state.heard };
+
   if (parsed) {
     Object.assign(state.data, parsed.slots);
     for (const step of parsed.answered) if (!state.answered.includes(step)) state.answered.push(step);
+  }
+  // Both things the details question asks about have already come up, so it is not asked.
+  if (!state.answered.includes("details") && state.data.matterType && state.data.matterType !== "outside" && !detailsFor(state).missing.length) {
+    state.data.signals = heardSignals(state);
+    state.answered.push("details");
   }
   // Contact details offered early are kept, whatever the current question was.
   if (!state.answered.includes("contact")) {
@@ -402,7 +476,8 @@ export function respond(previous: ChatState, message: string, interpretation?: I
   const answeredCurrent = state.answered.includes(current);
   if (answeredCurrent && interpretation?.acknowledgement) replies.push(interpretation.acknowledgement.slice(0, 200));
   if (answeredCurrent && current === "matter" && state.data.matterType) {
-    replies.push(`Got it: ${matterLabel(state.data.matterType).toLowerCase()}. The firm handles that.`);
+    const willAndTrust = /\bwills?\b/i.test(text) && /\btrusts?\b/i.test(text) && ["will", "trust"].includes(state.data.matterType);
+    replies.push(`Got it: ${willAndTrust ? "a will and a trust" : matterLabel(state.data.matterType).toLowerCase()}. The firm handles that.`);
   }
 
   const upcoming = nextStep(state);
