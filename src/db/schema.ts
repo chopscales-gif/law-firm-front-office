@@ -12,6 +12,10 @@ import type { ScoreFactor } from "@/lib/scoring";
 export const sandboxes = pgTable("sandboxes", {
   id: text("id").primaryKey(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  /** The visitor's own firm name, if they typed one. Null shows the fictional firm. */
+  firmName: text("firm_name"),
+  /** Goes up by one each time the visitor changes something, so a second device can ask cheaply whether to redraw. */
+  revision: integer("revision").notNull().default(0),
 });
 
 const sandboxId = () =>
@@ -194,6 +198,23 @@ export const chatSessions = pgTable("chat_sessions", {
   leadId: text("lead_id").references(() => leads.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 });
+
+/**
+ * A short-lived link that moves a visitor to a second device (laptop to phone)
+ * in the same sandbox. The link carries only the token, never the sandbox id.
+ */
+export const handoffs = pgTable(
+  "handoffs",
+  {
+    /** Unguessable value in the join link. */
+    token: text("token").primaryKey(),
+    sandboxId: sandboxId(),
+    /** The page the second device lands on. Always a path inside this app. */
+    path: text("path").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("handoffs_sandbox_idx").on(t.sandboxId)],
+);
 
 export type Lead = typeof leads.$inferSelect;
 export type Matter = typeof matters.$inferSelect;
