@@ -23,15 +23,23 @@ Each step is small. Together they are days of delay and several places for a mis
 - **Collects the signature** on a phone or a computer, typed or drawn, and produces a signed PDF with a record of who did what and when.
 - **Opens the matter** and shows the exact requests that would create the client and matter in Clio, and every email and text message that would have gone out.
 
+The demo itself adds a few things on top, all in the dark bar across the top of the page:
+
+- **Play the story.** About a minute, hands off: the demo presses its own buttons, from a client's first message to an open matter, with a one-sentence caption for each step and a Stop button throughout.
+- **Your firm's name.** Type a firm name and it replaces Alder & Finch on the website, the firm side, the chat, the letter, the signing page and the PDF. Everything else stays invented, and the bar says so.
+- **Continue on your phone.** A QR code opens the same copy of the sample data on a phone. Sign a letter there and the page on the computer updates by itself.
+- **About this demo.** One page on what was shown, what a real version would connect to, and which parts are recorded here and would be live in a real build.
+
 ## Try it
 
-Three things worth clicking first:
+Four things worth clicking first:
 
-1. On the client side, play **A conflict of interest**. Then switch to **Firm side**, open Marcus Bell, and run the conflict check. The other side gave her name as Kate Reyes. The firm knows her as Katherine O'Malley-Reyes, a current client.
-2. Open **Gideon Marsh**, whose letter is waiting for signature, and under **Play the client** choose **Open the signing page** to sign it. Then open the signed PDF.
-3. Open the **Outbox** to see everything the system would have sent along the way.
+1. Press **Play the story** in the top bar and watch for a minute. It ends on an open matter and a link to a page that explains what you saw.
+2. On the client side, play **A conflict of interest**. Then switch to **Firm side**, open Marcus Bell, and run the conflict check. The other side gave her name as Kate Reyes. The firm knows her as Katherine O'Malley-Reyes, a current client.
+3. Open **Gideon Marsh**, whose letter is waiting for signature, and choose **Sign it on your phone**. Scan the code, sign on the phone, and watch the computer change to Signed. With no phone to hand, **Open the signing page** does the same in one browser.
+4. Open **Conflict search** and use **Try to fool it**: four names written differently from the files that should still be found, and one that should not.
 
-**Reset demo** in the top bar puts everything back.
+Typing your firm's name into the top bar first makes all of it read as your own office. **Reset demo** puts everything back, including the name.
 
 ![The firm side: every inquiry, scored and tracked](docs/inquiries.png)
 
@@ -63,8 +71,8 @@ Next.js 16 (App Router, React 19, TypeScript), Tailwind CSS 4, Drizzle ORM on Po
 
 ```
 src/
-  app/                  pages: client site, firm side (/staff), signing (/sign), PDF route
-  components/           chat, signature pad, letter, navigation
+  app/                  pages: client site, firm side (/staff), signing (/sign), PDF route, phone handoff (/join), about
+  components/           chat, signature pad, letter, navigation, demo bar, story
   lib/
     chat/               the intake conversation: engine, advice guardrail, scripted scenarios
     conflicts/          name normalization, nicknames, similarity, the conflict check
@@ -79,7 +87,7 @@ src/
 Decisions worth knowing about:
 
 - **The core logic is plain functions with tests.** Conflict matching, scoring, the chat engine and the workflow do not depend on Next.js, and the workflow tests run against a real in-memory Postgres.
-- **Every visitor gets their own sandbox.** A cookie names a private copy of the sample data, created on first visit and deleted after 48 hours, so visitors to a public demo cannot see or disturb each other. One consequence: a signing link only opens in the browser that created it.
+- **Every visitor gets their own sandbox.** A cookie names a private copy of the sample data, created on first visit and deleted after 48 hours, so visitors to a public demo cannot see or disturb each other. A signing link therefore only opens in a browser that holds that cookie. The phone handoff works by giving the phone a short link, good for 15 minutes, that sets the same cookie. The link never contains the sandbox's own id.
 - **No paid services and no keys.** Email, text messages and Clio are recorded in an outbox table instead of being called. There is no language model in the demo.
 - **Postgres both ways.** Locally the app runs on an embedded Postgres (PGlite) stored in `.data/`, so there is nothing to install. With `DATABASE_URL` set it uses a normal Postgres server with the same schema and queries.
 
