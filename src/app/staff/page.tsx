@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Flash } from "@/components/flash";
-import { PageHeader, Score, StatusChip } from "@/components/ui";
+import { PageHeader, STAGE, Score, StatusChip } from "@/components/ui";
 import type { LeadStatus } from "@/db/schema";
 import { formatSlot } from "@/lib/chat/engine";
 import { timeAgo } from "@/lib/format";
@@ -27,11 +27,10 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
   const active = FILTERS.find((f) => f.key === status)?.key ?? null;
   const shown = active ? all.filter((lead) => lead.status === active) : all;
 
-  const tab = (isActive: boolean) =>
-    `inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-[3px] px-1 font-semibold ${
-      isActive ? "border-petrol text-petrol" : "border-transparent text-muted hover:border-line hover:text-ink"
-    }`;
-  const COLUMNS = "md:grid-cols-[minmax(0,1.5fr)_9.5rem_minmax(0,1fr)_11.5rem]";
+  /** A stage as a tile: its colour along the top, how many inquiries are at it, and its name. */
+  const tile = (isActive: boolean) =>
+    `panel relative flex min-w-[8.25rem] flex-1 flex-col sm:min-w-0 overflow-hidden px-4 pb-3 pt-4 ${isActive ? "!border-petrol !bg-petrol text-white" : "hover:border-petrol"}`;
+  const COLUMNS = "xl:grid-cols-[minmax(0,1.5fr)_11rem_minmax(0,1fr)_11.5rem_1.5rem]";
   const consult = (lead: (typeof all)[number]) =>
     lead.consultAt ? `Consultation ${formatSlot(lead.consultAt)}` : ["new", "cleared"].includes(lead.status) ? (lead.channel === "chat" ? "Asked for a call back" : "No consultation booked") : "";
 
@@ -42,66 +41,76 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
         engagement letter.
       </PageHeader>
 
-      <nav aria-label="Filter by stage" className="-mx-4 flex gap-x-6 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-        <Link href="/staff" className={tab(active === null)} aria-current={active === null ? "true" : undefined}>
-          All <span className="font-normal tabular-nums">{all.length}</span>
+      <nav aria-label="Filter by stage" className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 xl:grid-cols-7">
+        <Link href="/staff" className={tile(active === null)} aria-current={active === null ? "true" : undefined}>
+          <span aria-hidden className={`absolute inset-x-0 top-0 h-1.5 ${active === null ? "bg-lake-pale" : "bg-petrol"}`} />
+          <span className="font-serif text-[2rem] font-semibold leading-none tabular-nums">{all.length}</span>
+          <span className="mt-1.5 text-[0.9375rem] font-semibold leading-tight">All inquiries</span>
         </Link>
         {FILTERS.map((filter) => (
-          <Link key={filter.key} href={`/staff?status=${filter.key}`} className={tab(active === filter.key)} aria-current={active === filter.key ? "true" : undefined}>
-            {filter.label} <span className="font-normal tabular-nums">{all.filter((lead) => lead.status === filter.key).length}</span>
+          <Link key={filter.key} href={`/staff?status=${filter.key}`} className={tile(active === filter.key)} aria-current={active === filter.key ? "true" : undefined}>
+            <span aria-hidden className={`absolute inset-x-0 top-0 h-1.5 ${STAGE[filter.key].bar}`} />
+            <span className="font-serif text-[2rem] font-semibold leading-none tabular-nums">{all.filter((lead) => lead.status === filter.key).length}</span>
+            <span className="mt-1.5 text-[0.9375rem] font-semibold leading-tight">{filter.label}</span>
           </Link>
         ))}
       </nav>
 
       {shown.length === 0 ? (
-        <p className="py-8 text-muted">
+        <p className="panel mt-6 px-5 py-8 text-muted">
           No inquiries at this stage. <Link href="/" className="link">Start one from the client side</Link>.
         </p>
       ) : (
-        <>
-          <div aria-hidden className={`hidden gap-x-6 border-b border-line px-3 pb-2 pt-5 text-[0.9375rem] text-muted md:grid ${COLUMNS}`}>
+        <div className="panel mt-6 overflow-hidden">
+          <div aria-hidden className={`eyebrow hidden gap-x-6 border-b border-[#c3ced2] bg-salt px-5 py-3 xl:grid ${COLUMNS}`}>
             <span>Who and what</span>
             <span>Intake score</span>
             <span>When</span>
             <span>Stage</span>
           </div>
-          <ul className="mt-3 md:mt-0">
-            {shown.map((lead) => (
-              <li key={lead.id} className="border-b border-line">
-                <Link
-                  href={`/staff/leads/${lead.id}`}
-                  data-story-lead={lead.id}
-                  className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 px-1 py-4 hover:bg-surface md:px-3 md:py-3.5 ${COLUMNS} ${
-                    lead.safetyConcern && lead.status === "new" ? "shadow-[inset_4px_0_0_var(--color-flag)]" : ""
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-serif text-[1.1875rem] font-semibold leading-snug">
-                      {lead.name}
-                      {lead.safetyConcern && <span className="rounded-sm bg-flag px-1.5 py-0.5 font-sans text-[0.8125rem] font-semibold text-white">Safety concern</span>}
-                    </p>
-                    <p className="truncate text-muted">
-                      {matterLabel(lead.matterType)}
-                      {lead.adverseName ? `, other side ${lead.adverseName}` : ""}
-                    </p>
-                  </div>
-                  <div className="justify-self-end md:justify-self-start">
-                    <Score value={lead.score} tier={lead.scoreTier} />
-                  </div>
-                  <div className="min-w-0 text-[0.9375rem] leading-snug">
-                    <p>Arrived {timeAgo(lead.createdAt, ctx.now)}</p>
-                    <p className="text-muted">{consult(lead)}</p>
-                  </div>
-                  <div className="justify-self-end md:justify-self-start">
-                    <Flash value={lead.status}>
-                      <StatusChip status={lead.status} />
-                    </Flash>
-                  </div>
-                </Link>
-              </li>
-            ))}
+          <ul>
+            {shown.map((lead) => {
+              const urgent = lead.safetyConcern && lead.status === "new";
+              return (
+                <li key={lead.id} className="border-b border-line last:border-b-0">
+                  <Link
+                    href={`/staff/leads/${lead.id}`}
+                    data-story-lead={lead.id}
+                    className={`group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 px-4 py-4 xl:px-5 ${COLUMNS} ${
+                      urgent ? "bg-flag-tint shadow-[inset_5px_0_0_var(--color-flag)] hover:bg-[#f7dcd9]" : "hover:bg-lake-tint/60"
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-serif text-xl font-semibold leading-snug text-petrol">
+                        {lead.name}
+                        {lead.safetyConcern && <span className="rounded-full bg-flag px-2.5 py-0.5 font-sans text-[0.8125rem] font-bold text-white">Safety concern</span>}
+                      </p>
+                      <p className="mt-0.5 truncate text-muted">
+                        {matterLabel(lead.matterType)}
+                        {lead.adverseName ? `, other side ${lead.adverseName}` : ""}
+                      </p>
+                    </div>
+                    <div className="justify-self-end xl:justify-self-start">
+                      <Score value={lead.score} tier={lead.scoreTier} />
+                    </div>
+                    <div className="min-w-0 text-[0.9375rem] leading-snug">
+                      <p className="font-semibold">Arrived {timeAgo(lead.createdAt, ctx.now)}</p>
+                      <p className="text-muted">{consult(lead)}</p>
+                    </div>
+                    <div className="justify-self-end xl:justify-self-start">
+                      <Flash value={lead.status}>
+                        <StatusChip status={lead.status} />
+                      </Flash>
+                    </div>
+                    <span aria-hidden className="hidden text-xl font-semibold text-[#93a1a7] group-hover:text-petrol xl:block">
+                      &rarr;
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
-        </>
+        </div>
       )}
     </>
   );

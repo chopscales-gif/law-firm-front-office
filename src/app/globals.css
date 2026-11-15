@@ -15,6 +15,10 @@
   --color-lake-tint: #dcecef;
   --color-lake-pale: #a9d6df;
   --color-salt: #f2f5f5;
+  /* The client page is the firm's letterhead: warm stock, with the inquiry as a white sheet laid on it. */
+  --color-paper: #ece8df;
+  /* The firm side is software, not stationery: a cool desk, with each thing on its own white panel. */
+  --color-desk: #dfe6e8;
   --color-surface: #ffffff;
   --color-line: #d2dadd;
   --color-muted: #4d5a62;
@@ -22,6 +26,12 @@
   --color-flag-tint: #fbe9e7;
   --color-amber: #8a5a00;
   --color-amber-tint: #fbf0d5;
+  /* Go-ahead and done. */
+  --color-green: #1d6b4a;
+  --color-green-tint: #dcefe4;
+  /* Out of the firm's hands: waiting on the client. */
+  --color-plum: #5a3e85;
+  --color-plum-tint: #ebe5f4;
   --color-demo: #10171b;
   --font-serif: var(--font-besley), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
@@ -126,7 +136,50 @@ body {
     background: var(--color-surface);
   }
 
-  /* The engagement letter, the one thing in the app shown as a sheet of paper. */
+  /* One thing on the firm side: a white panel standing off the desk. */
+  .panel {
+    background: var(--color-surface);
+    border: 1px solid #c3ced2;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px rgba(11, 40, 54, 0.06), 0 8px 20px -14px rgba(11, 40, 54, 0.35);
+  }
+
+  /* The small capital label over a value or a column. */
+  .eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* The inquiry on the client page: a sheet of the firm's letterhead lying on the desk. */
+  .sheet {
+    background: var(--color-surface);
+    box-shadow: 0 2px 6px rgba(11, 40, 54, 0.08), 0 30px 60px -30px rgba(11, 40, 54, 0.45);
+  }
+
+  /* A line to write on, in place of a boxed field. */
+  .field-line {
+    width: 100%;
+    min-height: 2.75rem;
+    background: transparent;
+    font-size: 1.125rem;
+  }
+  .field-line::placeholder {
+    color: #5d696f;
+  }
+  /* While a script is typing into it the line is locked, and what is typed must still read as ink, with a caret after it. */
+  .field-line:disabled {
+    color: var(--color-ink);
+    -webkit-text-fill-color: var(--color-ink);
+    opacity: 1;
+  }
+  .field-line:focus-visible {
+    outline: none;
+  }
+
+  /* The engagement letter, shown as a sheet of paper like the inquiry. */
   .letter {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
@@ -152,6 +205,40 @@ body {
   }
   .letter li + li {
     margin-top: 0.25rem;
+  }
+}
+
+/* Three dots while the firm's reply is being written. */
+.typing {
+  display: flex;
+  gap: 0.375rem;
+  height: 1.25rem;
+  align-items: center;
+}
+.typing i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-lake);
+  animation: typing 1s ease-in-out infinite;
+}
+.typing i:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.typing i:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: none;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
   }
 }
 
@@ -186,22 +273,70 @@ body {
   animation: flash 2.4s ease-out;
 }
 
-/* What "Play the story" is pointing at. Dashed, like every other mark the demo leaves on the firm's screens. */
-@keyframes story-focus {
-  50% {
-    outline-offset: 8px;
+/*
+ * What "Play the story" is showing. The screen is dimmed and this one part is
+ * left lit: .story-light is a clear window whose shadow is the dimming.
+ */
+.story-dim {
+  /* The visitor's own pointer is hidden here, so the story's is the only one to follow. */
+  cursor: none;
+  animation: story-dim 300ms ease-out;
+}
+
+.story-light {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-radius: 0.625rem;
+  box-shadow: 0 0 0 200vmax rgba(16, 23, 27, 0.62), 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* The story's own pointer. Its tip is the top left corner, and the ring is the press. */
+.story-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  filter: drop-shadow(0 2px 4px rgba(16, 23, 27, 0.45));
+}
+.story-pointer svg {
+  position: absolute;
+  top: -3px;
+  left: -5px;
+}
+.story-pointer span {
+  position: absolute;
+  top: -1.25rem;
+  left: -1.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 3px solid var(--color-lake-pale);
+  background: rgba(169, 214, 223, 0.35);
+  opacity: 0;
+}
+.story-tap span {
+  animation: story-tap 420ms ease-out;
+}
+
+@keyframes story-tap {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.3);
   }
 }
 
-.story-focus {
-  outline: 2.5px dashed var(--color-ink);
-  outline-offset: 5px;
-  border-radius: 0.25rem;
-  animation: story-focus 1.2s ease-in-out 2;
-}
-
-.on-dark .story-focus {
-  outline-color: #ffffff;
+@keyframes story-dim {
+  from {
+    opacity: 0;
+  }
 }
 
 @keyframes rise-in {
@@ -222,7 +357,8 @@ dialog.demo-dialog::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .message-in,
   .rise-in,
-  .story-focus {
+  .typing i,
+  .story-dim {
     animation: none;
   }
   /* No fade: the changed value holds a plain wash until the class is taken off. */

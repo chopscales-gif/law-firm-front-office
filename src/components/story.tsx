@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { startStoryAction } from "@/server/actions";
 
 /**
- * "Play the story": about a minute, hands off, from a client's first message
+ * "Play the story": a little over two minutes, hands off, from a client's first message
  * to an open matter. Nothing here is a recording. The story presses the same
  * buttons a visitor would, in the visitor's own sandbox, and waits for each
  * real result before moving on. It lives in memory only, so a reload or the
@@ -22,7 +22,7 @@ export const STORY_CAPTIONS = [
   "The engagement letter is filled in from the intake answers. Nobody retypes a name or a fee.",
   "It goes out for signature by email. No printing, no scanning.",
   "This is what the client sees on their phone. They read it and sign.",
-  "Signed. The matter is open and ready for the practice management system, about a minute after the first message.",
+  "Signed. The matter is open and ready for the practice management system, a couple of minutes after the first message.",
 ];
 
 /** What the chat offers the story: play these lines through the real chat, and say which inquiry they became. */
@@ -46,6 +46,10 @@ const find = (marker: string) => document.querySelector<HTMLElement>(`[data-stor
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 /** How long the story waits for the app before giving up, far longer than any step takes. */
 const PATIENCE_MS = 20_000;
+/** Every pause is stretched by this, so each step can be read and followed without hurrying. */
+export const STORY_PACE = 1.6;
+/** Room left around the part of the page the story is showing, inside the dimmed screen. */
+const SPOT_MARGIN = 12;
 
 function clearFocus() {
   document.querySelectorAll(".story-focus").forEach((element) => element.classList.remove("story-focus"));
@@ -57,6 +61,58 @@ function point(element: HTMLElement, block: ScrollLogicalPosition = "center") {
   element.scrollIntoView({ block, behavior: reducedMotion() ? "auto" : "smooth" });
 }
 
+/** The pointer the story moves, so the eye can follow it from one thing to the next. Set while the story is on screen. */
+const pointer: { element: HTMLElement | null; x: number; y: number; on: HTMLElement | null; moving: boolean } = { element: null, x: 0, y: 0, on: null, moving: false };
+
+function placePointer(x: number, y: number) {
+  pointer.x = x;
+  pointer.y = y;
+  if (pointer.element) pointer.element.style.transform = `translate(${x}px, ${y}px)`;
+}
+
+/** Where on a thing the pointer lands: just past the middle of a button, so its label stays readable, or the near end of a wide row. */
+function aim(target: HTMLElement): [number, number] {
+  const rect = target.getBoundingClientRect();
+  return [rect.left + Math.min(rect.width * 0.7, 150), rect.top + rect.height * 0.62];
+}
+
+/** Moves the pointer onto a thing, tracking it while the page is still scrolling. */
+async function glide(target: HTMLElement, alive: () => boolean) {
+  if (!pointer.element) return;
+  const [fromX, fromY] = [pointer.x, pointer.y];
+  const [toX, toY] = aim(target);
+  // Further away takes longer, so the pointer never darts.
+  const duration = reducedMotion() ? 0 : Math.min(1300, 550 + Math.hypot(toX - fromX, toY - fromY) * 0.7);
+  const began = performance.now();
+  pointer.moving = true;
+  try {
+    for (;;) {
+      if (!alive() || !target.isConnected) return;
+      const t = duration ? Math.min(1, (performance.now() - began) / duration) : 1;
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      const [x, y] = aim(target);
+      placePointer(fromX + (x - fromX) * eased, fromY + (y - fromY) * eased);
+      if (t === 1) break;
+      await new Promise(requestAnimationFrame);
+    }
+    // Once there it stays on the thing, even if the page scrolls underneath.
+    pointer.on = target;
+  } finally {
+    pointer.moving = false;
+  }
+}
+
+/** Shows the pointer pressing down, just before the story presses the real thing. */
+async function tap(target: HTMLElement) {
+  const element = pointer.element;
+  if (!element) return;
+  if (target.isConnected) placePointer(...aim(target));
+  element.classList.remove("story-tap");
+  void element.offsetWidth;
+  element.classList.add("story-tap");
+  await wait(reducedMotion() ? 0 : 420);
+}
+
 /** Types into a field the way a person would, so the page's own handlers see every change. */
 async function typeInto(input: HTMLInputElement, text: string, alive: () => boolean) {
   const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
@@ -65,7 +121,7 @@ async function typeInto(input: HTMLInputElement, text: string, alive: () => bool
     if (!alive()) return;
     set?.call(input, value);
     input.dispatchEvent(new Event("input", { bubbles: true }));
-    if (steps.length > 1) await wait(45);
+    if (steps.length > 1) await wait(75);
   }
 }
 
@@ -155,7 +211,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       if (!alive()) throw new Stopped();
     };
     const pause = async (ms: number) => {
-      await wait(ms);
+      await wait(ms * STORY_PACE);
       check();
     };
     /** Waits for the app to show something, however long the server takes, and gives up only when it clearly will not. */
@@ -175,14 +231,30 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       router.push(to);
       await until(() => path.current === to);
     };
+    /** Lights a thing, walks the pointer to it, leaves time to read, then shows the press. The caller does the real press. */
+    const reach = async (target: HTMLElement, readFor: number, block: ScrollLogicalPosition = "center") => {
+      point(target, block);
+      await pause(500);
+      await glide(target, alive);
+      await pause(readFor);
+      await tap(target);
+      check();
+    };
     const press = async (marker: string, readFor: number) => {
       const button = await until(() => {
         const element = find(marker);
         return element && !(element as HTMLButtonElement).disabled ? element : null;
       });
-      point(button);
-      await pause(readFor);
+      await reach(button, readFor);
       button.click();
+    };
+    /** Follows a link the way a visitor would: the pointer goes to it and presses, and then the page changes. */
+    const follow = async (link: HTMLElement, to: string, readFor: number) => {
+      await reach(link, readFor);
+      await go(to);
+      clearFocus();
+      // A beat with the whole new page lit, before the light narrows onto one part of it.
+      await pause(1100);
     };
     const step = (n: number) => setPhase({ kind: "running", step: n });
 
@@ -200,18 +272,31 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       step(1);
       await go("/");
       const chat = await until(() => chatHandle.current);
+      await pause(900);
+      const sheet = find("chat");
+      if (sheet) point(sheet, "nearest");
+      const field = document.getElementById("chat-input");
+      if (field) {
+        await pause(500);
+        await glide(field, alive);
+        await tap(field);
+      }
+      await pause(700);
       const leadId = await chat.play(cast.messages, alive);
       check();
       if (!leadId) throw new Error("The conversation did not finish.");
       await pause(2200);
 
+      const firmSide = document.querySelector<HTMLElement>('nav[aria-label="Demo view"] a[href="/staff"]');
+      if (firmSide) await follow(firmSide, "/staff", 900);
       step(2);
       await go("/staff");
-      point(await until(() => document.querySelector<HTMLElement>(`[data-story-lead="${leadId}"]`)));
-      await pause(5200);
+      const row = await until(() => document.querySelector<HTMLElement>(`[data-story-lead="${leadId}"]`));
+      point(row);
+      await pause(4600);
 
+      await follow(row, `/staff/leads/${leadId}`, 600);
       step(3);
-      await go(`/staff/leads/${leadId}`);
       await press("run-check", 4200);
       point(await until(() => find("check-result")));
       await pause(2800);
@@ -228,30 +313,37 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       step(6);
       await press("send-letter", 3800);
       const signing = await until(() => find("open-signing"));
-      point(signing);
-      await pause(2400);
-
-      step(7);
       const signingPath = signing.getAttribute("href");
       if (!signingPath) throw new Error("The signing link is missing.");
-      await go(signingPath);
+      await follow(signing, signingPath, 2000);
+
+      step(7);
       const form = await until(() => find("sign-form"));
-      await pause(2600);
       point(form);
-      await pause(900);
+      await pause(2600);
       const name = form.querySelector<HTMLInputElement>("#typed-signature");
       const consent = form.querySelector<HTMLInputElement>('input[type="checkbox"]');
       const sign = form.querySelector<HTMLButtonElement>('button[type="submit"]');
       if (!name || !consent || !sign) throw new Error("The signing form is missing.");
+      await glide(name, alive);
+      await tap(name);
       await typeInto(name, cast.name, alive);
       await pause(600);
+      await glide(consent, alive);
+      await tap(consent);
       if (!consent.checked) consent.click();
-      await pause(1300);
+      await pause(900);
+      await glide(sign, alive);
+      await pause(500);
+      await tap(sign);
+      check();
       sign.click();
-      await until(() => find("signed"));
-      clearFocus();
-      await pause(2600);
+      const signedNote = await until(() => find("signed"));
+      point(signedNote);
+      await pause(3000);
 
+      const back = signedNote.querySelector<HTMLElement>(`a[href="/staff/leads/${leadId}"]`);
+      if (back) await follow(back, `/staff/leads/${leadId}`, 700);
       step(8);
       await go(`/staff/leads/${leadId}`);
       const matter = await until(() => find("matter"));
@@ -262,7 +354,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       // The closing panel stacks its buttons on a phone, so it is taller there.
       const room = window.innerHeight - (window.innerWidth < 640 ? 256 : 208);
       window.scrollTo({ top: window.scrollY + (box.height > room ? box.top - 16 : box.bottom - room), behavior: reducedMotion() ? "auto" : "smooth" });
-      await pause(1200);
+      await pause(2400);
       if (alive()) finish({ kind: "ended" });
     } catch (problem) {
       if (problem instanceof Stopped || !alive()) return;
@@ -276,8 +368,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoryContext.Provider value={story}>
       {children}
-      {/* While the story runs it holds the mouse, so a stray click cannot send the app somewhere the story is not. */}
-      {running && <div aria-hidden className="fixed inset-0 z-40" />}
+      {running && <Spotlight />}
       {(running || closing) && (
         <section aria-label="The story" className="on-dark rise-in fixed inset-x-2 bottom-2 z-50 mx-auto max-w-[46rem] rounded-lg bg-demo px-4 py-3.5 text-white shadow-[0_12px_40px_-8px_rgba(16,23,27,0.7)] sm:bottom-5 sm:px-5 sm:py-4">
           {phase.kind === "running" && (
@@ -319,5 +410,58 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
         </section>
       )}
     </StoryContext.Provider>
+  );
+}
+
+/**
+ * The walkthrough's dimmed screen. Everything is greyed except the part the
+ * story is showing, which the light follows as the page scrolls and changes.
+ * It also holds the mouse, so a stray click cannot send the app somewhere the
+ * story is not.
+ */
+function Spotlight() {
+  const light = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = light.current;
+    if (!element) return;
+    const still = reducedMotion();
+    let box: [number, number, number, number] | null = null;
+    let frame = 0;
+
+    const follow = () => {
+      frame = requestAnimationFrame(follow);
+      if (!pointer.moving && pointer.on?.isConnected) placePointer(...aim(pointer.on));
+      const target = document.querySelector<HTMLElement>(".story-focus");
+      // With nothing picked out yet, as on a page that has just opened, the light widens to the whole window.
+      const rect = target?.getBoundingClientRect() ?? new DOMRect(0, 0, window.innerWidth, window.innerHeight);
+      const want: [number, number, number, number] = [rect.left - SPOT_MARGIN, rect.top - SPOT_MARGIN, rect.width + 2 * SPOT_MARGIN, rect.height + 2 * SPOT_MARGIN];
+      // The light glides to a new place, and keeps up with the page while it scrolls.
+      box = box && !still ? (box.map((value, i) => value + (want[i] - value) * 0.16) as typeof want) : want;
+      element.style.transform = `translate(${box[0]}px, ${box[1]}px)`;
+      element.style.width = `${box[2]}px`;
+      element.style.height = `${box[3]}px`;
+    };
+    follow();
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const arrow = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    pointer.element = arrow.current;
+    placePointer(window.innerWidth / 2, window.innerHeight / 2);
+    return () => void (pointer.element = pointer.on = null);
+  }, []);
+
+  return (
+    <div aria-hidden className="story-dim fixed inset-0 z-40 overflow-hidden">
+      <div ref={light} className="story-light" />
+      <div ref={arrow} className="story-pointer">
+        <span />
+        <svg viewBox="0 0 24 24" width="30" height="30">
+          <path d="M5 2.5v17.2l4.6-4.3 3 6.6 2.9-1.3-3-6.5h6.3z" fill="#10171b" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </div>
   );
 }

@@ -29,42 +29,48 @@ export default async function Home() {
   const unfinished = await unfinishedChat(ctx);
 
   return (
-    <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* The spine: the firm speaking in its own voice. It carries the same petrol as the rail on the firm side. */}
-      <div className="on-dark relative isolate flex flex-col overflow-hidden bg-petrol text-white">
-        {/* The ampersand is Alder & Finch's own mark, so it goes when a visitor's firm name is showing. */}
-        {!firm.custom && (
-          <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-petrol-deep lg:block">
-            &amp;
-          </span>
-        )}
-        <header className="flex flex-wrap items-baseline justify-between gap-x-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
-          <p className="min-w-0 font-serif text-[1.375rem] font-semibold leading-tight [overflow-wrap:anywhere]">{firm.name}</p>
-          <p className="shrink-0 text-[0.9375rem] text-white/85">
-            <span className="hidden sm:inline">Call </span>
-            <a href={`tel:${FIRM.phone.replace(/\D/g, "")}`} className="inline-flex min-h-11 items-center font-semibold text-white underline decoration-white/40 underline-offset-4">
-              {FIRM.phone}
-            </a>
-          </p>
-        </header>
+    <div className="flex flex-1 flex-col bg-paper lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,32.5rem)] lg:gap-x-[clamp(2.5rem,5vw,4.5rem)] lg:px-[clamp(2.5rem,6vw,5.5rem)]">
+      <div className="flex min-w-0 flex-col">
+        {/* The firm speaking in its own voice. On a laptop this fills the window beside the inquiry sheet. */}
+        <div className="flex flex-col px-4 sm:px-6 lg:min-h-[max(35rem,calc(100svh-var(--demo-bar-h,3rem)))] lg:px-0">
+          <header className="flex flex-wrap items-baseline justify-between gap-x-6 pt-5 lg:pt-10">
+            <p className="flex min-w-0 flex-wrap items-baseline gap-x-4">
+              <span className="min-w-0 font-serif text-2xl leading-tight text-petrol [overflow-wrap:anywhere]">{firm.name}</span>
+              <span className="text-[0.8125rem] font-semibold uppercase tracking-[0.14em] text-muted">Attorneys at law</span>
+            </p>
+            <p className="shrink-0 text-[0.9375rem] text-muted">
+              <span className="hidden sm:inline">Call </span>
+              <a href={`tel:${FIRM.phone.replace(/\D/g, "")}`} className="inline-flex min-h-11 items-center font-semibold text-petrol underline decoration-petrol/40 underline-offset-4">
+                {FIRM.phone}
+              </a>
+            </p>
+          </header>
 
-        <div className="px-4 pb-8 pt-8 sm:px-6 lg:px-10 lg:pb-10 lg:pt-[clamp(2.5rem,9vh,6rem)]">
-          <h1 className="max-w-[16ch] text-balance font-serif text-[2.5rem] font-medium leading-[1.04] tracking-[-0.015em] sm:text-6xl lg:text-[min(4vw,4rem)]">
-            Family law and estate planning in Salt Lake City.
-          </h1>
-          <p className="mt-6 max-w-[42ch] text-lg leading-relaxed text-white/85 lg:text-xl">
-            Tell us what is going on and we will book you a free consultation with an attorney. No forms to print, no phone tag.
-          </p>
+          <div className="my-auto py-8 lg:py-10">
+            <h1 className="text-balance font-serif text-[2.75rem] leading-[1.02] tracking-[-0.03em] text-petrol sm:text-6xl lg:text-[clamp(3.25rem,min(6.4vw,11.5svh),5.75rem)] lg:leading-none lg:tracking-[-0.035em]">
+              Family law and estate planning, <em className="text-lake">without the runaround.</em>
+            </h1>
+            <p className="mt-6 max-w-[46ch] text-lg leading-relaxed lg:mt-7 lg:text-xl lg:leading-[1.5]">
+              Tell us what is going on and we will book you a free consultation with an attorney. No forms to print, no phone tag.
+            </p>
+          </div>
+
+          <ul className="hidden flex-wrap gap-x-10 gap-y-1 border-t border-petrol pb-8 pt-5 text-[0.9375rem] lg:flex">
+            {PRACTICE.map((item) => (
+              <li key={item.title}>{item.title}</li>
+            ))}
+          </ul>
         </div>
 
-        <div className="mt-auto hidden px-10 pb-8 lg:block">
-          <FirmDetails dark />
-          <FictionNote firm={firm} className="mt-10 max-w-[62ch] text-white/75" />
+        <div className="hidden border-t border-petrol/25 pb-14 pt-10 lg:block">
+          <FirmDetails />
+          <FictionNote firm={firm} className="mt-10 max-w-[62ch] text-muted" />
         </div>
       </div>
 
-      <main className="flex min-w-0 flex-col px-4 py-5 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100svh-var(--demo-bar-h,6.5rem))] lg:min-h-[35rem] lg:px-10 lg:py-5 short:py-3">
+      <main className="flex min-w-0 flex-col px-4 pb-6 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100svh-var(--demo-bar-h,3rem))] lg:min-h-[35rem] lg:px-0 lg:pb-5 lg:pt-10 short:pt-5">
         <Chat
+          firmName={firm.name}
           opening={opening.replies.map((text) => ({ role: "assistant", text }))}
           openingSuggestions={opening.suggestions}
           disclaimer={CHAT_DISCLAIMER}
@@ -74,7 +80,7 @@ export default async function Home() {
         />
       </main>
 
-      <div className="border-t border-line px-4 py-8 sm:px-6 lg:hidden">
+      <div className="border-t border-petrol/25 px-4 py-8 sm:px-6 lg:hidden">
         <FirmDetails />
         <FictionNote firm={firm} className="mt-8 text-muted" />
       </div>
@@ -104,27 +110,26 @@ function FictionNote({ firm, className }: { firm: Firm; className: string }) {
   );
 }
 
-function FirmDetails({ dark = false }: { dark?: boolean }) {
-  const quiet = dark ? "text-white/75" : "text-muted";
+function FirmDetails() {
   return (
     <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
       <section>
-        <h2 className="font-serif text-lg font-semibold">What we handle</h2>
+        <h2 className="font-serif text-xl text-petrol">What we handle</h2>
         <dl className="mt-3 space-y-2.5">
           {PRACTICE.map((item) => (
             <div key={item.title}>
               <dt className="font-semibold leading-snug">{item.title}</dt>
-              <dd className={`text-[0.9375rem] leading-snug ${quiet}`}>{item.text}</dd>
+              <dd className="text-[0.9375rem] leading-snug text-muted">{item.text}</dd>
             </div>
           ))}
         </dl>
       </section>
       <section>
-        <h2 className="font-serif text-lg font-semibold">What happens next</h2>
+        <h2 className="font-serif text-xl text-petrol">What happens next</h2>
         <ol className="mt-3 space-y-3">
           {NEXT_STEPS.map((step, i) => (
             <li key={step} className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2">
-              <span className={`font-serif text-lg font-semibold leading-snug ${dark ? "text-lake-pale" : "text-lake"}`}>{i + 1}</span>
+              <span className="font-serif text-lg leading-snug text-lake">{i + 1}</span>
               <span className="leading-snug">{step}</span>
             </li>
           ))}

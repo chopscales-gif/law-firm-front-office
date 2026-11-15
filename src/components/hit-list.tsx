@@ -1,9 +1,9 @@
 import type { ConflictHit, Level } from "@/lib/conflicts/check";
 
-const LEVEL: Record<Level, { label: string; bar: string; text: string }> = {
-  conflict: { label: "Possible conflict", bar: "border-flag", text: "text-flag" },
-  review: { label: "Needs review", bar: "border-amber", text: "text-amber" },
-  info: { label: "For information", bar: "border-[#7c888e]", text: "text-muted" },
+const LEVEL: Record<Level, { label: string; box: string; chip: string }> = {
+  conflict: { label: "Possible conflict", box: "border-flag bg-flag-tint", chip: "bg-flag text-white" },
+  review: { label: "Needs review", box: "border-amber bg-amber-tint", chip: "bg-amber text-white" },
+  info: { label: "For information", box: "border-[#7c888e] bg-salt", chip: "bg-[#c9d2d6] text-ink" },
 };
 
 const SUBJECT_ROLE = { prospect: "Prospective client", adverse: "Other side", related: "Also involved" };
@@ -23,22 +23,22 @@ export function HitList({ hits, searched = "In this inquiry" }: { hits: Conflict
         const level = LEVEL[hit.level];
         const quiet = hit.level === "info";
         return (
-          <li key={i} className={`border-l-4 ${level.bar} ${quiet ? "" : "bg-surface"}`}>
-            <div className={quiet ? "py-1 pl-4" : "px-5 py-4"}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <span className={`font-semibold ${level.text}`}>{level.label}</span>
-                <span className="text-[0.9375rem] text-muted">
+          <li key={i} className={`rounded-md border border-l-[6px] ${level.box}`}>
+            <div className={quiet ? "px-4 py-3" : "px-5 py-4"}>
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <span className={`rounded-full px-3 py-1 text-[0.875rem] font-bold leading-tight ${level.chip}`}>{level.label}</span>
+                <span className="text-[0.9375rem] font-semibold">
                   {STRENGTH[hit.strength]}, {Math.round(hit.score * 100)}%
                 </span>
               </div>
 
-              <div className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:items-start">
-                <div>
+              <div className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
+                <div className="rounded bg-surface px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
                   <p className="text-[0.9375rem] text-muted">{searched}: {SUBJECT_ROLE[hit.subject.role].toLowerCase()}</p>
                   <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-medium"}`}>{hit.subject.name}</p>
                 </div>
-                <p className="text-[0.9375rem] italic text-muted sm:pt-7 sm:text-center">matches</p>
-                <div>
+                <p className="self-center text-[0.9375rem] font-semibold italic sm:text-center">matches</p>
+                <div className="rounded bg-surface px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
                   <p className="text-[0.9375rem] text-muted">
                     On file: {PARTY_ROLE[hit.partyRole].toLowerCase()}, {hit.matterStatus} matter
                   </p>
@@ -47,9 +47,9 @@ export function HitList({ hits, searched = "In this inquiry" }: { hits: Conflict
                 </div>
               </div>
 
-              <p className="mt-3 max-w-[70ch] leading-relaxed">{hit.relationship}</p>
-              <div className="mt-2 text-[0.9375rem] leading-relaxed text-muted">
-                <p>Why these were matched</p>
+              <p className="mt-4 max-w-[70ch] font-semibold leading-relaxed">{hit.relationship}</p>
+              <div className="mt-2 text-[0.9375rem] leading-relaxed">
+                <p className="eyebrow">Why these were matched</p>
                 <ul className="list-disc pl-5">
                   {hit.reasons.map((reason) => (
                     <li key={reason}>{reason}</li>

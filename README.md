@@ -25,7 +25,7 @@ Each step is small. Together they are days of delay and several places for a mis
 
 The demo itself adds a few things on top, all in the dark bar across the top of the page:
 
-- **Play the story.** About a minute, hands off: the demo presses its own buttons, from a client's first message to an open matter, with a one-sentence caption for each step and a Stop button throughout.
+- **Play the story.** A little over two minutes, hands off: the demo presses its own buttons, from a client's first message to an open matter. The screen dims around the part being shown and a pointer moves to each thing before it is pressed, with a one-sentence caption for each step and a Stop button throughout.
 - **Your firm's name.** Type a firm name and it replaces Alder & Finch on the website, the firm side, the chat, the letter, the signing page and the PDF. Everything else stays invented, and the bar says so.
 - **Continue on your phone.** A QR code opens the same copy of the sample data on a phone. Sign a letter there and the page on the computer updates by itself.
 - **About this demo.** One page on what was shown, what a real version would connect to, and which parts are recorded here and would be live in a real build.
@@ -34,7 +34,7 @@ The demo itself adds a few things on top, all in the dark bar across the top of 
 
 Four things worth clicking first:
 
-1. Press **Play the story** in the top bar and watch for a minute. It ends on an open matter and a link to a page that explains what you saw.
+1. Press **Play the story** in the top bar and watch for a couple of minutes. It ends on an open matter and a link to a page that explains what you saw.
 2. On the client side, play **A conflict of interest**. Then switch to **Firm side**, open Marcus Bell, and run the conflict check. The other side gave her name as Kate Reyes. The firm knows her as Katherine O'Malley-Reyes, a current client.
 3. Open **Gideon Marsh**, whose letter is waiting for signature, and choose **Sign it on your phone**. Scan the code, sign on the phone, and watch the computer change to Signed. With no phone to hand, **Open the signing page** does the same in one browser.
 4. Open **Conflict search** and use **Try to fool it**: four names written differently from the files that should still be found, and one that should not.

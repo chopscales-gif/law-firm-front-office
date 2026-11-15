@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HitList } from "@/components/hit-list";
-import { OutcomeChip, PageHeader } from "@/components/ui";
+import { OUTCOME, OutcomeChip, PageHeader } from "@/components/ui";
 import type { Subject } from "@/lib/conflicts/check";
 import { SEARCH_EXAMPLES } from "@/lib/conflicts/examples";
 import { getCtx } from "@/server/session";
@@ -33,7 +33,7 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
       </PageHeader>
 
       {/* Keyed by the search, so the fields show an example's name and role when one is clicked. */}
-      <form key={`${name}|${role}`} action="/staff/conflicts" className="grid max-w-[60rem] gap-4 border-y-2 border-petrol py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
+      <form key={`${name}|${role}`} action="/staff/conflicts" className="panel grid max-w-[60rem] gap-4 border-t-[6px] !border-t-petrol px-5 py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
         <div>
           <label htmlFor="name" className="block font-semibold">
             Name of a person or business
@@ -69,10 +69,10 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
               <Link
                 href={`/staff/conflicts?name=${encodeURIComponent(example.name)}&role=${example.role}`}
                 aria-current={example.name === name && example.role === role ? "true" : undefined}
-                className="flex h-full min-h-11 flex-col rounded border-[1.5px] border-line px-3 py-2 hover:border-demo aria-[current]:border-demo"
+                className="flex h-full min-h-11 flex-col rounded border-[1.5px] border-line px-3 py-2 hover:border-demo aria-[current]:border-demo aria-[current]:bg-demo aria-[current]:text-white"
               >
                 <span className="font-semibold leading-snug">{example.name}</span>
-                <span className="mt-0.5 text-sm leading-snug text-muted">{example.shows}</span>
+                <span className="mt-0.5 text-sm leading-snug opacity-75">{example.shows}</span>
               </Link>
             </li>
           ))}
@@ -80,13 +80,16 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
       </div>
 
       {result && (
-        <section aria-live="polite" className="mt-10 max-w-[60rem]">
-          <h2 className="font-serif text-[1.75rem] font-medium leading-tight">Results for {name}</h2>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <OutcomeChip outcome={result.outcome} />
-            <p className="font-semibold">{result.summary}</p>
+        <section aria-live="polite" className="panel mt-8 max-w-[60rem] px-5 py-6">
+          <p className="eyebrow">Results for</p>
+          <h2 className="font-serif text-[1.75rem] font-semibold leading-tight text-petrol">{name}</h2>
+          <div className={`mt-4 rounded-md border border-l-[6px] px-5 py-4 ${OUTCOME[result.outcome].box}`}>
+            <div className="flex flex-wrap items-center gap-3">
+              <OutcomeChip outcome={result.outcome} />
+              <p className="text-[1.0625rem] font-bold">{result.summary}</p>
+            </div>
+            {result.hits.length > 0 && <p className="mt-2 text-[0.9375rem]">{result.partiesSearched} names on file searched.</p>}
           </div>
-          {result.hits.length > 0 && <p className="mt-1 text-[0.9375rem] text-muted">{result.partiesSearched} names on file searched.</p>}
           <div className="mt-4">
             <HitList hits={result.hits} searched="Your search" />
           </div>

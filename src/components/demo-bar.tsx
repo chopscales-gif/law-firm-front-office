@@ -11,12 +11,13 @@ import { useStory } from "./story";
 
 const control = "inline-flex min-h-11 cursor-pointer items-center rounded-sm px-3 font-semibold sm:min-h-9";
 const outlined = `${control} border border-white/45 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60`;
+const plain = `${control} font-normal text-white/85 hover:bg-white/15 hover:text-white disabled:opacity-60`;
 const underlined = `${control} underline decoration-white/50 underline-offset-4 hover:decoration-white disabled:opacity-60`;
 
 /**
  * The strip across the top of every page. It is the only part of the screen
- * that belongs to the demo rather than to the firm's product: the top row says
- * what this is, the second row holds the things a visitor can try.
+ * that belongs to the demo rather than to the firm's product: it says what this
+ * is, then holds the things a visitor can try. One row on a laptop.
  */
 export function DemoBar({ firm }: { firm: Firm }) {
   const pathname = usePathname();
@@ -41,8 +42,9 @@ export function DemoBar({ firm }: { firm: Firm }) {
 
   return (
     <div ref={bar} className="on-dark bg-demo text-[0.9375rem] text-white">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2 sm:px-6 sm:py-1.5 lg:px-10">
-        <p className="min-w-0 flex-1 basis-64 leading-snug">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 px-4 py-2 sm:px-6 sm:py-1.5">
+        <p className="min-w-0 flex-1 basis-64 pr-3 leading-snug">
+          <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-lake-pale align-middle" />
           <strong className="font-semibold">Demonstration build.</strong>{" "}
           <span className="text-white/80">
             {/* A visitor's own firm is real, so with their name showing the bar says whose data is invented, and never that the firm is. */}
@@ -50,12 +52,14 @@ export function DemoBar({ firm }: { firm: Firm }) {
               ? "Your firm's name is shown on invented sample data. Nothing is sent."
               : `${FIRM.shortName} is a fictional firm, the data is invented, and nothing is sent.`}
           </span>{" "}
-          {/* On a phone the second row has no room for this link, so it closes the sentence. */}
+          <span className="hidden text-white/70 2xl:inline">Built by ChopMedia.</span>{" "}
+          {/* On a phone there is no room for this link among the controls, so it closes the sentence. */}
           <Link href="/about" className="whitespace-nowrap font-semibold underline decoration-white/50 underline-offset-4 md:hidden">
             About this demo
           </Link>
         </p>
-        <nav aria-label="Demo view" className="flex items-center gap-1 rounded border border-white/30 p-1 sm:p-0.5">
+        {/* Last on a laptop, where it ends the strip. On a phone it stays beside the notice. */}
+        <nav aria-label="Demo view" className="flex items-center gap-1 rounded border border-white/30 p-1 sm:p-0.5 lg:order-last lg:ml-2">
           <Link href="/" className={tab(!firmSide)} aria-current={!firmSide ? "page" : undefined}>
             Client side
           </Link>
@@ -63,33 +67,28 @@ export function DemoBar({ firm }: { firm: Firm }) {
             Firm side
           </Link>
         </nav>
-        <form action={resetDemoAction}>
-          <ResetButton />
-        </form>
-        <span className="hidden text-white/70 md:inline">Built by ChopMedia</span>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-white/15 px-4 py-2 sm:px-6 sm:py-1.5 lg:px-10">
         <button
           type="button"
           data-story="play"
           onClick={story.start}
           disabled={story.busy}
-          className={`${control} gap-2 bg-white text-demo hover:bg-white/85 disabled:cursor-not-allowed disabled:opacity-60`}
+          className={`${control} gap-2 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60 max-lg:bg-white max-lg:text-demo`}
         >
           <svg aria-hidden viewBox="0 0 12 12" className="size-3 fill-current">
             <path d="M2 1l9 5-9 5z" />
           </svg>
           {story.busy ? "Playing the story" : "Play the story"}
         </button>
-        <span className="hidden text-white/75 lg:inline">One minute, hands off.</span>
         <FirmName key={firm.custom ? firm.name : ""} firm={firm} />
         {clientSide && <PhoneHandoff path={pathname} />}
-        <Link href="/about" aria-current={pathname === "/about" ? "page" : undefined} className={`${underlined} max-md:hidden lg:ml-auto`}>
-          About this demo
+        <Link href="/about" aria-current={pathname === "/about" ? "page" : undefined} className={`${plain} max-md:hidden`}>
+          About
         </Link>
+        <form action={resetDemoAction}>
+          <ResetButton />
+        </form>
         {story.error && (
-          <p role="alert" className="basis-full pb-1 font-semibold text-white">
+          <p role="alert" className="order-last basis-full pb-1 font-semibold text-white">
             {story.error}
           </p>
         )}
@@ -145,13 +144,13 @@ function FirmName({ firm }: { firm: Firm }) {
 
   return (
     <>
-      {/* Below the widest layout the question folds into one button, so the bar stays short. */}
+      {/* The question folds into one button, so the bar stays one row until it is asked. */}
       {!editing && (
-        <button type="button" onClick={() => setEditing(true)} className={`${outlined} xl:hidden`}>
+        <button type="button" onClick={() => setEditing(true)} className={plain}>
           Use your firm&apos;s name
         </button>
       )}
-      <form onSubmit={submit} className={`min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 ${editing ? "flex basis-full xl:basis-auto" : "hidden xl:flex"}`}>
+      <form onSubmit={submit} className={`min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 ${editing ? "order-last flex basis-full pb-1" : "hidden"}`}>
         <label htmlFor="firm-name" className="font-semibold">
           What&apos;s your firm called?
         </label>
@@ -195,7 +194,7 @@ function PhoneHandoff({ path }: { path: string }) {
 
   return (
     <>
-      <button type="button" onClick={show} className={`${outlined} max-md:hidden`}>
+      <button type="button" onClick={show} className={`${plain} max-md:hidden`}>
         Continue on your phone
       </button>
       <dialog
@@ -227,7 +226,7 @@ function PhoneHandoff({ path }: { path: string }) {
 function ResetButton() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className={underlined}>
+    <button type="submit" disabled={pending} className={plain}>
       {pending ? "Resetting" : "Reset demo"}
     </button>
   );
