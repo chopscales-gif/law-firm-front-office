@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/db/schema";
 import type { Scenario } from "@/lib/chat/scenarios";
 import { endChatAction, sendChatAction, type ChatView } from "@/server/actions";
+import { liveRefresh } from "./live-updates";
 import { chatHandle } from "./story";
 
 type Props = {
@@ -57,6 +58,29 @@ export function Chat({ opening, openingSuggestions, disclaimer, scenarios, advic
     setMessages((all) => (all.some((message) => message.role === "visitor") ? all : opening));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `opening` is a new array on every render; its text is what matters
   }, [greeting]);
+
+  // During a hand-off the visitor's other device may carry the conversation on, finish it or abandon it.
+  // When a redraw prompted by that device brings a different conversation, this one follows it.
+  const restoredKey = restored ? `${restored.sessionId}:${restored.messages.length}` : "";
+  useEffect(() => {
+    if (Date.now() - liveRefresh.at > 5000 || pending || playing) return;
+    if (restored) {
+      if (restored.sessionId === sessionId.current && restored.messages.length <= messages.length) return;
+      sessionId.current = restored.sessionId;
+      unfinished.current = true;
+      setMessages(restored.messages);
+      setSuggestions(restored.suggestions);
+    } else if (sessionId.current && unfinished.current) {
+      sessionId.current = null;
+      unfinished.current = false;
+      setMessages(opening);
+      setSuggestions(openingSuggestions);
+    } else return;
+    setStatus("collecting");
+    setLeadId(null);
+    setError(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new conversation from the server matters, not this device's own typing
+  }, [restoredKey]);
 
   function restart() {
     run.current += 1;

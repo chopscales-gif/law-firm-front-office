@@ -257,11 +257,10 @@ export async function sendChatAction(sessionId: string | null, text: string): Pr
       .update(chatSessions)
       .set({ state: turn.state, messages: [...session.messages, ...added], suggestions: turn.suggestions, leadId })
       .where(eq(chatSessions.id, session.id));
-    if (leadId !== session.leadId) {
-      // A new inquiry is something the firm side shows, on this device and on a second one.
-      await recordChange(ctx);
-      revalidatePath("/", "layout");
-    }
+    // Every message counts as a change, so a second device showing this conversation keeps up with it.
+    await recordChange(ctx);
+    // A new inquiry is something the firm side shows too.
+    if (leadId !== session.leadId) revalidatePath("/", "layout");
 
     return { ok: true, view: { sessionId: session.id, added, suggestions: turn.suggestions, status: turn.state.status, leadId } };
   } catch (error) {
@@ -280,6 +279,7 @@ export async function endChatAction(sessionId: string): Promise<void> {
     const { db, sandboxId } = await getCtx();
     // A conversation that became an inquiry is part of the record and is kept.
     await db.delete(chatSessions).where(and(eq(chatSessions.id, sessionId), eq(chatSessions.sandboxId, sandboxId), isNull(chatSessions.leadId)));
+    await recordChange({ db, sandboxId });
   } catch (error) {
     console.error(error);
   }

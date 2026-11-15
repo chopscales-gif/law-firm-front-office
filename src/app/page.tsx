@@ -38,7 +38,7 @@ export default async function Home() {
             &amp;
           </span>
         )}
-        <header className="flex items-baseline justify-between gap-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
+        <header className="flex flex-wrap items-baseline justify-between gap-x-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
           <p className="min-w-0 font-serif text-[1.375rem] font-semibold leading-tight [overflow-wrap:anywhere]">{firm.name}</p>
           <p className="shrink-0 text-[0.9375rem] text-white/85">
             <span className="hidden sm:inline">Call </span>
