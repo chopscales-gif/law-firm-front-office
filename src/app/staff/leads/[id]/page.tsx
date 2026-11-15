@@ -189,7 +189,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
             n={4}
             title="Engagement letter"
             state={after(sent, lead.status === "cleared")}
-            summary={sent ? "Sent for signature" : document ? "Draft ready to send" : lead.status === "cleared" ? "Filled in from the intake answers" : "Comes after the attorney clears the inquiry"}
+            summary={signed ? "Sent and signed" : sent ? "Sent for signature" : document ? "Draft ready to send" : lead.status === "cleared" ? "Filled in from the intake answers" : "Comes after the attorney clears the inquiry"}
           >
             {lead.status === "cleared" && (consultAhead || !lead.consultAt) && (
               <p className="demo-note mb-4 max-w-[38rem] px-4 py-3 text-[0.9375rem] leading-relaxed">

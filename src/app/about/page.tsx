@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "About this demo" };
 
 const SAW = [
   "A new client explained what they needed in a chat, at any hour, and was booked for a consultation without anyone at the office picking up a phone.",
-  "The inquiry reached the firm already scored and summarised, and one click checked every name in it against the firm's files, including nicknames, former names and misspellings.",
+  "The inquiry reached the firm already scored and summarized, and one click checked every name in it against the firm's files, including nicknames, former names and misspellings.",
   "An attorney made the decision. The software found the matches and recorded the decision. It did not make it.",
   "The engagement letter was filled in from the intake answers, signed on a phone, and the matter was opened with nothing typed twice.",
 ];

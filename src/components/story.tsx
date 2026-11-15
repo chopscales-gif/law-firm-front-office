@@ -16,7 +16,7 @@ import { startStoryAction } from "@/server/actions";
 /** One sentence per step: what is happening, and why an office would care. */
 export const STORY_CAPTIONS = [
   "A new client writes in, at any hour. The assistant takes the details and books a consultation, with no one at the office.",
-  "The inquiry is already in the firm's list, scored and summarised, before anyone has picked up a phone.",
+  "The inquiry is already in the firm's list, scored and summarized, before anyone has picked up a phone.",
   "One click checks every name against the firm's files, including nicknames and former names.",
   "Nothing found, so the attorney clears it. The decision and the time are recorded.",
   "The engagement letter is filled in from the intake answers. Nobody retypes a name or a fee.",
