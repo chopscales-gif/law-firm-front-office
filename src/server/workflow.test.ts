@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { createEmbeddedDb, type Db } from "@/db/client";
 import { ensureSandbox, resetSandbox } from "@/db/sandbox";
 import { leads, matters, outboxMessages, parties, signatureEvents } from "@/db/schema";
-import type { IntakeData } from "@/lib/intake";
+import { DEMO_FIRM, type IntakeData } from "@/lib/intake";
 import {
   WorkflowError,
   checkLeadForConflicts,
@@ -44,7 +44,7 @@ const intake = (over: Partial<IntakeData>): IntakeData => ({
 beforeAll(async () => {
   db = await createEmbeddedDb();
   await ensureSandbox(db, "visitor-a", NOW);
-  ctx = { db, sandboxId: "visitor-a", now: NOW };
+  ctx = { db, sandboxId: "visitor-a", now: NOW, firm: DEMO_FIRM };
 }, 60_000);
 
 describe("sandbox", () => {
@@ -63,7 +63,7 @@ describe("sandbox", () => {
 
   it("keeps visitors apart and resets cleanly", async () => {
     await ensureSandbox(db, "visitor-b", NOW);
-    const b: Ctx = { db, sandboxId: "visitor-b", now: NOW };
+    const b: Ctx = { db, sandboxId: "visitor-b", now: NOW, firm: DEMO_FIRM };
     const created = await createLead(b, intake({ name: "Only In B" }), "form");
     const inA = await db.select().from(leads).where(and(eq(leads.sandboxId, "visitor-a"), eq(leads.name, "Only In B")));
     expect(inA).toHaveLength(0);

@@ -18,6 +18,7 @@ import {
 import { runConflictCheck, type ConflictResult, type PartyRecord, type Subject } from "@/lib/conflicts/check";
 import { looksLikeOrganization } from "@/lib/conflicts/normalize";
 import { letterPlainText, renderLetter, templateFor } from "@/lib/documents/templates";
+import type { Firm } from "@/lib/intake";
 import {
   clioMessages,
   declineMessage,
@@ -37,7 +38,8 @@ import { scoreLead } from "@/lib/scoring";
 
 export class WorkflowError extends Error {}
 
-export type Ctx = { db: Db; sandboxId: string; now: Date };
+/** `firm` is the firm as this visitor sees it: the fictional one, or the name they typed. */
+export type Ctx = { db: Db; sandboxId: string; now: Date; firm: Firm };
 
 async function queue(ctx: Ctx, leadId: string | null, messages: (Outgoing | null)[]): Promise<void> {
   const rows = messages
@@ -96,7 +98,7 @@ export async function createLead(ctx: Ctx, intake: IntakeData, channel: Lead["ch
       scoreFactors: score.factors,
     })
     .returning();
-  await queue(ctx, lead.id, inquiryMessages(lead, `/staff/leads/${lead.id}`));
+  await queue(ctx, lead.id, inquiryMessages(ctx.firm, lead, `/staff/leads/${lead.id}`));
   return lead;
 }
 
@@ -200,7 +202,7 @@ export async function decide(ctx: Ctx, leadId: string, decision: Decision, note:
       .delete(documents)
       .where(and(eq(documents.leadId, leadId), eq(documents.sandboxId, ctx.sandboxId), eq(documents.status, "draft")));
   }
-  if (decision === "declined" && lead.status !== "declined") await queue(ctx, leadId, [declineMessage(lead)]);
+  if (decision === "declined" && lead.status !== "declined") await queue(ctx, leadId, [declineMessage(ctx.firm, lead)]);
   return updated;
 }
 
@@ -223,7 +225,7 @@ export async function createLetter(ctx: Ctx, leadId: string): Promise<DocumentRo
   await ctx.db
     .delete(documents)
     .where(and(eq(documents.leadId, leadId), eq(documents.sandboxId, ctx.sandboxId), eq(documents.status, "draft")));
-  const letter = renderLetter(templateFor(lead.matterType), {
+  const letter = renderLetter(templateFor(lead.matterType), ctx.firm, {
     name: lead.name,
     email: lead.email,
     phone: lead.phone,
@@ -299,7 +301,7 @@ async function sendClaimed(ctx: Ctx, lead: Lead, doc: DocumentRow): Promise<Sign
     .returning();
   await ctx.db.update(leads).set({ status: "letter_sent" }).where(and(eq(leads.id, leadId), eq(leads.sandboxId, ctx.sandboxId)));
   await logEvent(ctx, request.id, "sent", `Sent to ${lead.email ?? lead.name} for signature`);
-  await queue(ctx, leadId, [signatureRequestMessage(lead, `/sign/${request.token}`)]);
+  await queue(ctx, leadId, [signatureRequestMessage(ctx.firm, lead, `/sign/${request.token}`)]);
   return request;
 }
 
@@ -398,8 +400,8 @@ async function recordSignature(ctx: Ctx, view: SigningView, kind: SignatureInput
   await ctx.db.insert(parties).values(partyRows);
 
   await queue(ctx, lead.id, [
-    ...signedMessages(lead, matterName),
-    ...clioMessages(lead, matterName, ctx.now),
+    ...signedMessages(ctx.firm, lead, matterName),
+    ...clioMessages(ctx.firm, lead, matterName, ctx.now),
   ]);
   return { lead: signedLead, matterId };
 }

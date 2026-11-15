@@ -1,4 +1,4 @@
-import { FIRM, areaOf, matterLabel, type IntakeData, type LeadSource, type MatterType, type Urgency } from "../intake";
+import { DEMO_FIRM, areaOf, beforeStop, matterLabel, type Firm, type IntakeData, type LeadSource, type MatterType, type Urgency } from "../intake";
 import { NO_ADVICE_REPLY, SAFETY_REPLY, SELF_HARM_REPLY, asksForLegalAdvice, isUnplacedQuestion, mentionsSafetyRisk, mentionsSelfHarm } from "./guardrail";
 
 /**
@@ -392,7 +392,7 @@ function firstName(state: ChatState): string {
 }
 
 /** The question for a step, with its quick replies. */
-export function promptFor(step: Step, state: ChatState): { text: string; suggestions: string[] } {
+export function promptFor(step: Step, state: ChatState, firm: Firm = DEMO_FIRM): { text: string; suggestions: string[] } {
   const family = state.data.matterType !== undefined && areaOf(state.data.matterType) === "family";
   switch (step) {
     case "matter":
@@ -451,7 +451,7 @@ export function promptFor(step: Step, state: ChatState): { text: string; suggest
       };
     case "slot":
       return {
-        text: `Last step. ${FIRM.attorney} offers a free 30-minute consultation. Which time suits you?`,
+        text: `Last step. ${firm.attorney} offers a free 30-minute consultation. Which time suits you?`,
         suggestions: [...state.slots.map((s) => s.label), "Call me instead"],
       };
   }
@@ -470,9 +470,10 @@ const REASK: Record<Step, string> = {
   slot: "Which of the times below suits you? You can also ask for a call back.",
 };
 
+// The office address is part of the sample data, whatever name the firm goes by.
 const FAQ: [RegExp, string][] = [
   [/\b(cost|price|fee|charge|free|how much)\b.*\b(consult\w*|call|appointment|meeting)\b|\b(consult\w*|call|appointment)\b.*\b(cost|price|fee|charge|free)\b/, "The first consultation is free and lasts 30 minutes."],
-  [/\b(your|office) (hours|address|location)\b|\bwhere are you (located|based)\b|\bwhen are you open\b/, `The office is at ${FIRM.address}, open weekdays 8:30 to 5:30.`],
+  [/\b(your|office) (hours|address|location)\b|\bwhere are you (located|based)\b|\bwhen are you open\b/, `The office is at ${DEMO_FIRM.address}, open weekdays 8:30 to 5:30.`],
   [/\b(are you|is this) (a |an )?(real|human|person|bot|robot|ai|lawyer|attorney)\b/, "I'm an automated intake assistant, not a lawyer. A person at the firm reviews everything I collect."],
 ];
 
@@ -480,13 +481,13 @@ function nextStep(state: ChatState): Step | null {
   return STEP_ORDER.find((s) => !state.answered.includes(s)) ?? null;
 }
 
-export function startChat(slots: ConsultSlot[]): ChatTurn {
+export function startChat(slots: ConsultSlot[], firm: Firm = DEMO_FIRM): ChatTurn {
   const state: ChatState = { data: {}, answered: [], status: "collecting", slots };
-  const prompt = promptFor("matter", state);
+  const prompt = promptFor("matter", state, firm);
   return {
     state,
     replies: [
-      `Hi, I'm the intake assistant for ${FIRM.name}. I'll take a few details and book you a free consultation. I can't give legal advice.`,
+      `Hi, I'm the intake assistant for ${beforeStop(firm.name)}. I'll take a few details and book you a free consultation. I can't give legal advice.`,
       prompt.text,
     ],
     suggestions: prompt.suggestions,
@@ -505,7 +506,7 @@ function summary(data: Partial<IntakeData>, slots: ConsultSlot[]): string {
  * Advances the conversation by one visitor message.
  * `interpretation` lets a model supply the slot values; without it the keyword parser runs.
  */
-export function respond(previous: ChatState, message: string, interpretation?: Interpretation): ChatTurn {
+export function respond(previous: ChatState, message: string, interpretation?: Interpretation, firm: Firm = DEMO_FIRM): ChatTurn {
   const state: ChatState = { ...previous, data: { ...previous.data }, answered: [...previous.answered] };
   const text = message.trim();
 
@@ -587,7 +588,7 @@ export function respond(previous: ChatState, message: string, interpretation?: I
   if (state.data.matterType === "outside") {
     state.status = "outside";
     replies.push(
-      `Thanks for telling me. ${FIRM.name} only handles family law and estate planning, so the firm can't take this on. The Utah State Bar keeps a directory of lawyers by practice area that can point you to the right kind of attorney.`,
+      `Thanks for telling me. ${firm.name} only handles family law and estate planning, so the firm can't take this on. The Utah State Bar keeps a directory of lawyers by practice area that can point you to the right kind of attorney.`,
     );
     return { state, replies, suggestions: [], guardrail };
   }
@@ -615,7 +616,7 @@ export function respond(previous: ChatState, message: string, interpretation?: I
     replies.push(LICENSED_ONLY_IN_UTAH);
   }
 
-  const prompt = promptFor(upcoming, state);
+  const prompt = promptFor(upcoming, state, firm);
   if (answeredCurrent) replies.push(prompt.text);
   else if (otherTime) return { state, replies, suggestions: prompt.suggestions, guardrail };
   else if (current === "matter" && !replies.length && /^(hi|hello|hey|good (morning|afternoon|evening))\b[\s\w]{0,12}[.!]*$/i.test(text)) {
@@ -629,7 +630,7 @@ export function respond(previous: ChatState, message: string, interpretation?: I
   }
   else if (current === "matter" && !replies.length) {
     replies.push(
-      `I couldn't match that to what the firm does. ${FIRM.name} handles divorce, custody and support, adoption, guardianship, wills, trusts and probate. If yours is one of those, pick it below or say it another way. If it isn't, the firm is probably not the right fit, and you can call ${FIRM.phone} to check.`,
+      `I couldn't match that to what the firm does. ${firm.name} handles divorce, custody and support, adoption, guardianship, wills, trusts and probate. If yours is one of those, pick it below or say it another way. If it isn't, the firm is probably not the right fit, and you can call ${firm.phone} to check.`,
     );
   }
   else if (guardrail === "safety") replies.push(`When you are ready to carry on: ${REASK[upcoming]}`);
@@ -643,7 +644,7 @@ export function completedIntake(state: ChatState): IntakeData | null {
 }
 
 /** Hours Mountain Time is behind UTC at this moment: 7 in winter, 6 during daylight saving. */
-function mountainOffsetHours(at: Date): number {
+export function mountainOffsetHours(at: Date): number {
   const part = new Intl.DateTimeFormat("en-US", { timeZone: FIRM_TIME_ZONE, timeZoneName: "shortOffset" })
     .formatToParts(at)
     .find((p) => p.type === "timeZoneName")?.value;

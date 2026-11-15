@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* A laptop window that is wide but not tall. The client page fits the window, so its demo notes get shorter here. */
+@custom-variant short (@media (min-width: 64rem) and (max-height: 56rem));
+
 /*
  * Alder & Finch. Colours come from the Great Salt Lake on a clear day: the deep petrol of
  * open water, the salt crust, the lighter teal of the shallows.
@@ -38,6 +41,11 @@ body {
 .on-dark :focus-visible,
 .on-dark:focus-visible {
   outline-color: #ffffff;
+}
+
+/* A dialog opened from the dark demo bar is a light sheet, so its focus ring goes back to the dark one. */
+.on-dark dialog :focus-visible {
+  outline-color: var(--color-lake);
 }
 
 @layer components {
@@ -158,9 +166,70 @@ body {
   animation: message-in 180ms ease-out;
 }
 
+/*
+ * A value that another device just changed, such as a letter signed on a phone
+ * while the firm side is open on a laptop. The wash fades out by itself.
+ */
+@keyframes flash {
+  from {
+    background-color: var(--color-lake-pale);
+    box-shadow: 0 0 0 0.375rem var(--color-lake-pale);
+  }
+  to {
+    background-color: transparent;
+    box-shadow: 0 0 0 0.375rem transparent;
+  }
+}
+
+.flash {
+  border-radius: 0.125rem;
+  animation: flash 2.4s ease-out;
+}
+
+/* What "Play the story" is pointing at. Dashed, like every other mark the demo leaves on the firm's screens. */
+@keyframes story-focus {
+  50% {
+    outline-offset: 8px;
+  }
+}
+
+.story-focus {
+  outline: 2.5px dashed var(--color-ink);
+  outline-offset: 5px;
+  border-radius: 0.25rem;
+  animation: story-focus 1.2s ease-in-out 2;
+}
+
+.on-dark .story-focus {
+  outline-color: #ffffff;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.rise-in {
+  animation: rise-in 200ms ease-out;
+}
+
+dialog.demo-dialog::backdrop {
+  background: rgba(16, 23, 27, 0.6);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .message-in {
+  .message-in,
+  .rise-in,
+  .story-focus {
     animation: none;
+  }
+  /* No fade: the changed value holds a plain wash until the class is taken off. */
+  .flash {
+    animation: none;
+    background-color: var(--color-lake-pale);
+    box-shadow: 0 0 0 0.375rem var(--color-lake-pale);
   }
   .btn {
     transition: none;

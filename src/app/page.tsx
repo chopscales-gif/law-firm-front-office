@@ -1,9 +1,9 @@
 import { Chat } from "@/components/chat";
 import { offerSlots, startChat } from "@/lib/chat/engine";
 import { CHAT_DISCLAIMER } from "@/lib/chat/guardrail";
-import { SCENARIOS } from "@/lib/chat/scenarios";
-import { FIRM } from "@/lib/intake";
-import { bookedConsultTimes } from "@/server/queries";
+import { ADVICE_QUESTIONS, SCENARIOS } from "@/lib/chat/scenarios";
+import { FIRM, type Firm } from "@/lib/intake";
+import { bookedConsultTimes, unfinishedChat } from "@/server/queries";
 import { getCtx } from "@/server/session";
 
 const PRACTICE = [
@@ -24,18 +24,23 @@ const NEXT_STEPS = [
 export default async function Home() {
   // Seeds the visitor's sample data now, so the first chat message is not the slow one.
   const ctx = await getCtx();
-  const opening = startChat(offerSlots(ctx.now, await bookedConsultTimes(ctx)));
+  const { firm } = ctx;
+  const opening = startChat(offerSlots(ctx.now, await bookedConsultTimes(ctx)), firm);
+  const unfinished = await unfinishedChat(ctx);
 
   return (
     <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       {/* The spine: the firm speaking in its own voice. It carries the same petrol as the rail on the firm side. */}
       <div className="on-dark relative isolate flex flex-col overflow-hidden bg-petrol text-white">
-        <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-petrol-deep lg:block">
-          &amp;
-        </span>
+        {/* The ampersand is Alder & Finch's own mark, so it goes when a visitor's firm name is showing. */}
+        {!firm.custom && (
+          <span aria-hidden className="pointer-events-none absolute -right-[0.1em] top-[0.02em] -z-10 hidden select-none font-serif text-[34rem] font-semibold italic leading-none text-petrol-deep lg:block">
+            &amp;
+          </span>
+        )}
         <header className="flex items-baseline justify-between gap-4 px-4 pt-5 sm:px-6 lg:px-10 lg:pt-8">
-          <p className="font-serif text-[1.375rem] font-semibold leading-none">{FIRM.name}</p>
-          <p className="text-[0.9375rem] text-white/85">
+          <p className="min-w-0 font-serif text-[1.375rem] font-semibold leading-tight [overflow-wrap:anywhere]">{firm.name}</p>
+          <p className="shrink-0 text-[0.9375rem] text-white/85">
             <span className="hidden sm:inline">Call </span>
             <a href={`tel:${FIRM.phone.replace(/\D/g, "")}`} className="inline-flex min-h-11 items-center font-semibold text-white underline decoration-white/40 underline-offset-4">
               {FIRM.phone}
@@ -54,32 +59,47 @@ export default async function Home() {
 
         <div className="mt-auto hidden px-10 pb-8 lg:block">
           <FirmDetails dark />
-          <FictionNote className="mt-10 max-w-[62ch] text-white/75" />
+          <FictionNote firm={firm} className="mt-10 max-w-[62ch] text-white/75" />
         </div>
       </div>
 
-      <main className="flex min-w-0 flex-col px-4 py-5 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100svh-3.875rem)] lg:min-h-[35rem] lg:px-10 lg:py-5">
+      <main className="flex min-w-0 flex-col px-4 py-5 sm:px-6 lg:sticky lg:top-0 lg:h-[calc(100svh-var(--demo-bar-h,6.5rem))] lg:min-h-[35rem] lg:px-10 lg:py-5 short:py-3">
         <Chat
           opening={opening.replies.map((text) => ({ role: "assistant", text }))}
           openingSuggestions={opening.suggestions}
           disclaimer={CHAT_DISCLAIMER}
           scenarios={SCENARIOS}
+          adviceQuestions={ADVICE_QUESTIONS}
+          restored={unfinished && { sessionId: unfinished.id, messages: unfinished.messages, suggestions: unfinished.suggestions }}
         />
       </main>
 
       <div className="border-t border-line px-4 py-8 sm:px-6 lg:hidden">
         <FirmDetails />
-        <FictionNote className="mt-8 text-muted" />
+        <FictionNote firm={firm} className="mt-8 text-muted" />
       </div>
     </div>
   );
 }
 
-function FictionNote({ className }: { className: string }) {
+/**
+ * The small print under the firm's details. A name the visitor typed belongs to
+ * a real firm, so the note then says what is invented and never that the firm is.
+ */
+function FictionNote({ firm, className }: { firm: Firm; className: string }) {
   return (
-    <p className={`text-sm leading-relaxed ${className}`}>
-      {FIRM.name}, {FIRM.address}. {FIRM.name} is a fictional firm created for this demonstration. No legal services are offered here, and nothing on this
-      site is legal advice.
+    <p className={`text-sm leading-relaxed [overflow-wrap:anywhere] ${className}`}>
+      {firm.custom ? (
+        <>
+          This is a demonstration build. The name {firm.name} is shown because it was typed into this demo. The address, the phone number, the attorney
+          and every client are invented. No legal services are offered here, and nothing on this site is legal advice.
+        </>
+      ) : (
+        <>
+          {firm.name}, {firm.address}. {firm.name} is a fictional firm created for this demonstration. No legal services are offered here, and nothing on
+          this site is legal advice.
+        </>
+      )}
     </p>
   );
 }

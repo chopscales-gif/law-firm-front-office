@@ -38,7 +38,7 @@ export function DecisionForm({ leadId, noteRequiredToClear }: { leadId: string; 
         placeholder="For example: different person, confirmed by date of birth."
       />
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" disabled={pending} onClick={() => choose("cleared")} className="btn btn-primary">
+        <button type="button" disabled={pending} onClick={() => choose("cleared")} data-story="clear" className="btn btn-primary">
           Clear to proceed
         </button>
         <button type="button" disabled={pending} onClick={() => choose("flagged")} className="btn btn-quiet">

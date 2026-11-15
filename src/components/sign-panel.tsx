@@ -81,7 +81,7 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
     `min-h-11 flex-1 cursor-pointer rounded-sm px-4 font-semibold ${active ? "bg-petrol text-white" : "text-petrol hover:bg-lake-tint"}`;
 
   return (
-    <form onSubmit={submit} className="rounded-lg border-2 border-petrol bg-surface p-5 sm:p-6">
+    <form onSubmit={submit} data-story="sign-form" className="rounded-lg border-2 border-petrol bg-surface p-5 sm:p-6">
       <h2 className="font-serif text-2xl font-semibold">Sign the letter</h2>
       <p className="mt-1 text-muted">Signing as {signerName}.</p>
 

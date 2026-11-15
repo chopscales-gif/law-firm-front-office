@@ -1,5 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
+import { DEMO_FIRM } from "../intake";
 import { buildLetterPdf } from "./pdf";
 import { letterPlainText, merge, renderLetter, templateFor, type LetterInput } from "./templates";
 
@@ -22,20 +23,20 @@ describe("engagement letter templates", () => {
 
   it("fills every field, leaving no placeholders behind", () => {
     for (const matterType of ["divorce", "custody", "will", "trust", "probate"] as const) {
-      const { blocks } = renderLetter(templateFor(matterType), { ...input, matterType });
+      const { blocks } = renderLetter(templateFor(matterType), DEMO_FIRM, { ...input, matterType });
       expect(letterPlainText(blocks)).not.toMatch(/\{\{|\}\}|undefined|null/);
     }
   });
 
   it("names the client and the other party", () => {
-    const text = letterPlainText(renderLetter("engagement-family", input).blocks);
+    const text = letterPlainText(renderLetter("engagement-family", DEMO_FIRM, input).blocks);
     expect(text).toContain("José Hernández");
     expect(text).toContain("Marisol Hernández");
     expect(text).toContain("November 13, 2026");
   });
 
   it("words a probate letter as court work on an estate, with its own fee", () => {
-    const text = letterPlainText(renderLetter("engagement-estate", { ...input, matterType: "probate", adverseName: null, relatedNames: ["Rosa Hernández"] }).blocks);
+    const text = letterPlainText(renderLetter("engagement-estate", DEMO_FIRM, { ...input, matterType: "probate", adverseName: null, relatedNames: ["Rosa Hernández"] }).blocks);
     expect(text).toContain("probate of the estate you told us about");
     // The intake never asks who died, so a related name must not be presented as the deceased.
     expect(text).not.toContain("estate of Rosa Hernández");
@@ -44,7 +45,7 @@ describe("engagement letter templates", () => {
   });
 
   it("does not claim that no conflict was found", () => {
-    expect(letterPlainText(renderLetter("engagement-family", input).blocks)).not.toMatch(/found no conflict/);
+    expect(letterPlainText(renderLetter("engagement-family", DEMO_FIRM, input).blocks)).not.toMatch(/found no conflict/);
   });
 
   it("leaves an unknown field visible so a broken template is obvious", () => {
@@ -53,19 +54,20 @@ describe("engagement letter templates", () => {
 });
 
 describe("letter PDF", () => {
-  const { blocks } = renderLetter("engagement-family", input);
+  const { blocks } = renderLetter("engagement-family", DEMO_FIRM, input);
 
   it("builds an unsigned letter", async () => {
-    const bytes = await buildLetterPdf({ blocks, signature: null, audit: [], documentHash: "abc123" });
+    const bytes = await buildLetterPdf({ firm: DEMO_FIRM, blocks, signature: null, audit: [], documentHash: "abc123" });
     const pdf = await PDFDocument.load(bytes);
     expect(pdf.getPageCount()).toBeGreaterThanOrEqual(1);
   });
 
   it("adds a signature record page once signed", async () => {
-    const unsigned = await PDFDocument.load(await buildLetterPdf({ blocks, signature: null, audit: [], documentHash: "abc123" }));
+    const unsigned = await PDFDocument.load(await buildLetterPdf({ firm: DEMO_FIRM, blocks, signature: null, audit: [], documentHash: "abc123" }));
     const signedAt = new Date("2026-11-13T19:00:00Z");
     const signed = await PDFDocument.load(
       await buildLetterPdf({
+        firm: DEMO_FIRM,
         blocks,
         signature: { signerName: input.name, kind: "typed", imageDataUrl: null, signedAt },
         audit: [{ at: signedAt, label: "Signed by José Hernández (typed name)" }],
@@ -77,6 +79,6 @@ describe("letter PDF", () => {
 
   it("copes with characters the built-in fonts cannot draw", async () => {
     const odd = [{ type: "paragraph" as const, text: "Zoë “quoted” — 李 ✍︎ Łukasz" }];
-    await expect(buildLetterPdf({ blocks: odd, signature: null, audit: [], documentHash: "x" })).resolves.toBeInstanceOf(Uint8Array);
+    await expect(buildLetterPdf({ firm: DEMO_FIRM, blocks: odd, signature: null, audit: [], documentHash: "x" })).resolves.toBeInstanceOf(Uint8Array);
   });
 });

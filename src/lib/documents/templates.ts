@@ -1,4 +1,4 @@
-import { FIRM, areaOf, matterLabel, type MatterType } from "../intake";
+import { areaOf, beforeStop, matterLabel, type Firm, type MatterType } from "../intake";
 
 /**
  * Engagement letter templates. Text in {{double braces}} is filled from the intake answers.
@@ -44,7 +44,7 @@ export const TEMPLATES: Record<TemplateKey, Template> = {
       { type: "paragraph", text: "Dear {{clientFirstName}}," },
       {
         type: "paragraph",
-        text: "Thank you for choosing {{firmName}}. This letter sets out what we will do for you, what it will cost, and what we each agree to.",
+        text: "Thank you for choosing {{firmNameBeforeStop}}. This letter sets out what we will do for you, what it will cost, and what we each agree to.",
       },
       { type: "heading", text: "What we will do" },
       {
@@ -81,7 +81,7 @@ export const TEMPLATES: Record<TemplateKey, Template> = {
       { type: "paragraph", text: "Dear {{clientFirstName}}," },
       {
         type: "paragraph",
-        text: "Thank you for choosing {{firmName}}. This letter sets out what we will do for you, what it will cost, and what we each agree to.",
+        text: "Thank you for choosing {{firmNameBeforeStop}}. This letter sets out what we will do for you, what it will cost, and what we each agree to.",
       },
       { type: "heading", text: "What we will do" },
       {
@@ -139,9 +139,9 @@ const MATTER_NOUN: Record<MatterType, string> = {
 const money = (n: number) => n.toLocaleString("en-US");
 
 /** The values that go into the letter, shown to staff beside the preview so they can see what was merged. */
-export function letterFields(input: LetterInput): Record<string, string> {
+export function letterFields(firm: Firm, input: LetterInput): Record<string, string> {
   const area = areaOf(input.matterType);
-  const flatFee = FIRM.flatFees[input.matterType] ?? FIRM.flatFees.will;
+  const flatFee = firm.flatFees[input.matterType] ?? firm.flatFees.will;
   const probate = input.matterType === "probate";
   const related = input.relatedNames.length ? `, taking into account ${input.relatedNames.join(" and ")}` : "";
   const surname = input.name.trim().split(/\s+/).at(-1) ?? input.name;
@@ -162,10 +162,11 @@ export function letterFields(input: LetterInput): Record<string, string> {
       ? "Half is due when you sign this letter and half when the estate is closed."
       : "Half is due when you sign this letter and half at the signing meeting.",
     court: input.county ? `district court for ${input.county} County, Utah` : "Utah district courts",
-    attorney: FIRM.attorney,
-    firmName: FIRM.name,
-    hourlyRate: money(FIRM.hourlyRate),
-    retainer: money(FIRM.retainer.family),
+    attorney: firm.attorney,
+    firmName: firm.name,
+    firmNameBeforeStop: beforeStop(firm.name),
+    hourlyRate: money(firm.hourlyRate),
+    retainer: money(firm.retainer.family),
     flatFee: money(flatFee),
     retainerClause: area === "family" ? " and the retainer" : " and the first half of the fee",
   };
@@ -176,9 +177,14 @@ export function merge(text: string, fields: Record<string, string>): string {
   return text.replace(/\{\{(\w+)\}\}/g, (whole, key: string) => (key in fields ? fields[key] : whole));
 }
 
-export function renderLetter(key: TemplateKey, input: LetterInput): { title: string; blocks: Block[]; fields: Record<string, string> } {
+/**
+ * The firm's name is merged into the letter here and stored with it. A letter
+ * is a record of what was sent, so one already written keeps the name it was
+ * written with if the visitor changes the firm name afterwards.
+ */
+export function renderLetter(key: TemplateKey, firm: Firm, input: LetterInput): { title: string; blocks: Block[]; fields: Record<string, string> } {
   const template = TEMPLATES[key];
-  const fields = letterFields(input);
+  const fields = letterFields(firm, input);
   const blocks = template.blocks.map((block) => ({
     type: block.type,
     text: merge(block.text, fields),

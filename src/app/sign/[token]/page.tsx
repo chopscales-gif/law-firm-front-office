@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Letter } from "@/components/letter";
 import { SignPanel } from "@/components/sign-panel";
 import { fmtDateTime } from "@/lib/format";
-import { FIRM } from "@/lib/intake";
+import { firmOnLetter } from "@/lib/intake";
 import { getCtx } from "@/server/session";
 import { getSigningView, markViewed } from "@/server/workflow";
 
@@ -20,8 +20,8 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
       <main className="w-full max-w-3xl flex-1 px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
         <h1 className="font-serif text-4xl font-medium leading-tight">This signing link does not work here</h1>
         <p className="mt-4 max-w-[62ch] text-lg leading-relaxed text-muted">
-          Each visitor to this demo gets their own private copy of the sample data, so a signing link only opens in the browser that created it. The link
-          also stops working when the demo is reset.
+          Each visitor to this demo gets their own private copy of the sample data, so a signing link only opens where that copy is open. The link also
+          stops working when the demo is reset.
         </p>
         <Link href="/staff" className="btn btn-primary mt-6">
           Go to the firm side
@@ -32,12 +32,14 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
 
   const { request, document, lead } = view;
   const signed = request.status === "signed";
+  // The client signs the letter as it was written, so the page carries the name on the letter.
+  const firm = firmOnLetter(document.fields.firmName);
 
   return (
     <>
       <header className="on-dark bg-petrol text-white">
         <div className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-5 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
-          <p className="font-serif text-[1.375rem] font-semibold leading-none">{FIRM.name}</p>
+          <p className="font-serif text-[1.375rem] font-semibold leading-tight [overflow-wrap:anywhere]">{firm.name}</p>
           <h1 className="mt-7 max-w-[24ch] font-serif text-[2rem] font-medium leading-[1.1] tracking-[-0.015em] sm:text-5xl">
             {signed ? "Thank you. Your letter is signed." : `${request.signerName}, please read and sign your engagement letter.`}
           </h1>
@@ -47,7 +49,7 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
               ) : (
                 <>
                   Read the letter below. If anything is unclear, call the firm on{" "}
-                  <span className="whitespace-nowrap">{FIRM.phone}</span> before you sign.
+                  <span className="whitespace-nowrap">{firm.phone}</span> before you sign.
                 </>
               )}
           </p>
@@ -60,7 +62,12 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
       </header>
 
       <main className={`mx-auto grid w-full max-w-[72rem] flex-1 items-start gap-x-10 gap-y-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10 ${signed ? "lg:grid-cols-[minmax(0,1fr)_20rem]" : "lg:grid-cols-[minmax(0,1fr)_24rem]"}`}>
-        <Letter blocks={document.blocks}>
+        {firm.name !== ctx.firm.name && (
+          <p className="demo-note col-span-full max-w-[44rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
+            This letter was written before the firm name on the demo was changed, so it keeps the name it was written with, as a letter already sent would.
+          </p>
+        )}
+        <Letter firm={firm} blocks={document.blocks}>
           {signed && (
             <div className="mt-8 border-t border-line pt-4">
               {request.signatureKind === "drawn" && request.signatureData ? (
@@ -84,15 +91,20 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
         )}
 
         {signed && (
-          <div className="demo-note p-5 lg:sticky lg:top-6">
+          <div data-story="signed" className="demo-note p-5 lg:sticky lg:top-6">
             <p className="font-semibold">What just happened on the firm side</p>
             <p className="mt-1 text-[0.9375rem] leading-relaxed text-muted">
               The matter was opened, the client and matter were queued for Clio, a signed copy was emailed, and the new names joined the files that every
               future conflict check searches.
             </p>
-            <Link href={`/staff/leads/${lead.id}`} className="btn btn-primary mt-4">
-              See it on the firm side
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link href={`/staff/leads/${lead.id}`} className="btn btn-primary">
+                See it on the firm side
+              </Link>
+              <Link href="/about" className="btn btn-quiet">
+                What you just saw
+              </Link>
+            </div>
           </div>
         )}
       </main>

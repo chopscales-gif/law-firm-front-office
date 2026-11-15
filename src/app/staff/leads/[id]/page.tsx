@@ -3,12 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionButton } from "@/components/action-button";
 import { DecisionForm } from "@/components/decision-form";
+import { Flash } from "@/components/flash";
+import { PhoneSigning } from "@/components/handoff";
 import { HitList } from "@/components/hit-list";
 import { Letter } from "@/components/letter";
 import { OutcomeChip, Score, StatusChip } from "@/components/ui";
 import { formatSlot } from "@/lib/chat/engine";
 import { fmtDateTime } from "@/lib/format";
-import { SOURCE_LABEL, URGENCY_LABEL, matterLabel } from "@/lib/intake";
+import { SOURCE_LABEL, URGENCY_LABEL, firmOnLetter, matterLabel } from "@/lib/intake";
 import { createLetterAction, runCheckAction, sendForSignatureAction } from "@/server/actions";
 import { findLead, matterForLead, outboxFor, signatureFor } from "@/server/queries";
 import { getCtx } from "@/server/session";
@@ -55,6 +57,9 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
     ["Consultation", lead.consultAt ? formatSlot(lead.consultAt) : lead.channel === "chat" ? "Asked for a call back" : "None booked"],
   ];
   const clioCalls = outbox.filter((m) => m.channel === "clio").reverse();
+  // A letter is a record: it keeps the firm name it was written with, even if the visitor has since changed the name on the demo.
+  const letterFirm = document ? firmOnLetter(document.fields.firmName) : ctx.firm;
+  const consultAhead = lead.consultAt !== null && new Date(lead.consultAt) > ctx.now;
 
   return (
     <>
@@ -68,7 +73,9 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
             {matterLabel(lead.matterType)}. {CHANNEL[lead.channel]}, {fmtDateTime(lead.createdAt)}.
           </p>
         </div>
-        <StatusChip status={lead.status} />
+        <Flash value={lead.status}>
+          <StatusChip status={lead.status} />
+        </Flash>
       </div>
       {lead.safetyConcern && (
         <p className="mt-5 border-l-4 border-flag bg-flag-tint px-4 py-3 text-flag">
@@ -123,7 +130,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
           >
             {check ? (
               <>
-                <div className="flex flex-wrap items-center gap-3">
+                <div data-story="check-result" className="flex flex-wrap items-center gap-3">
                   <OutcomeChip outcome={check.outcome} />
                   <p className="font-semibold">{check.summary}</p>
                 </div>
@@ -145,7 +152,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
                   Searches every client, opposing party and related name on file for {lead.name}
                   {lead.adverseName ? `, ${lead.adverseName}` : ""} and anyone else named, including nicknames, former names and misspellings.
                 </p>
-                <ActionButton action={runCheckAction.bind(null, lead.id)} pendingLabel="Checking">
+                <ActionButton action={runCheckAction.bind(null, lead.id)} pendingLabel="Checking" story="run-check">
                   Run conflict check
                 </ActionButton>
               </>
@@ -184,8 +191,15 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
             state={after(sent, lead.status === "cleared")}
             summary={sent ? "Sent for signature" : document ? "Draft ready to send" : lead.status === "cleared" ? "Filled in from the intake answers" : "Comes after the attorney clears the inquiry"}
           >
+            {lead.status === "cleared" && (consultAhead || !lead.consultAt) && (
+              <p className="demo-note mb-4 max-w-[38rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
+                {consultAhead
+                  ? `The consultation is booked for ${formatSlot(lead.consultAt!)}. A firm would send this letter after that meeting. The demo lets you send it now, so you can follow one inquiry to the end.`
+                  : "No consultation has been held yet. A firm would send this letter after meeting the client. The demo lets you send it now, so you can follow one inquiry to the end."}
+              </p>
+            )}
             {lead.status === "cleared" && !document && (
-              <ActionButton action={createLetterAction.bind(null, lead.id)} pendingLabel="Preparing">
+              <ActionButton action={createLetterAction.bind(null, lead.id)} pendingLabel="Preparing" story="prepare-letter">
                 Prepare engagement letter
               </ActionButton>
             )}
@@ -193,7 +207,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
               <>
                 {lead.status === "cleared" && (
                   <div className="mb-4 flex flex-wrap gap-2">
-                    <ActionButton action={sendForSignatureAction.bind(null, lead.id)} pendingLabel="Sending">
+                    <ActionButton action={sendForSignatureAction.bind(null, lead.id)} pendingLabel="Sending" story="send-letter">
                       Send for signature
                     </ActionButton>
                     <a href={`/api/documents/${document.id}/pdf`} target="_blank" className="btn btn-quiet">
@@ -203,10 +217,15 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
                 )}
                 <details open={lead.status === "cleared"}>
                   <summary className="link inline-flex min-h-11 cursor-pointer items-center">Read the letter</summary>
-                  <div className="mt-3">
-                    <Letter blocks={document.blocks} />
+                  <div data-story="letter" className="mt-3 scroll-mt-4">
+                    <Letter firm={letterFirm} blocks={document.blocks} />
                   </div>
                 </details>
+                {letterFirm.name !== ctx.firm.name && (
+                  <p className="demo-note mt-3 max-w-[38rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
+                    This letter was written before the firm name on the demo was changed, so it keeps the name it was written with, as a letter already sent would.
+                  </p>
+                )}
               </>
             )}
           </Step>
@@ -235,9 +254,12 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
                   <div className="demo-note mt-4 max-w-[38rem] p-4">
                     <p className="font-semibold">Play the client</p>
                     <p className="mt-1 text-[0.9375rem] text-muted">A real installation would email the signing link (it is in the outbox). Open it here to sign as {lead.name}.</p>
-                    <Link href={`/sign/${signature.request.token}`} prefetch={false} className="btn btn-primary mt-3">
-                      Open the signing page
-                    </Link>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link href={`/sign/${signature.request.token}`} prefetch={false} data-story="open-signing" className="btn btn-primary">
+                        Open the signing page
+                      </Link>
+                      <PhoneSigning path={`/sign/${signature.request.token}`} signerName={lead.name} />
+                    </div>
                   </div>
                 )}
               </>
@@ -247,7 +269,7 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
           <Step n={6} title="Matter opened" state={after(signed && !!matter, false)} summary={matter ? matter.name : "Client and matter will be created in Clio"} last>
             {matter && (
               <>
-                <p className="max-w-[62ch] leading-relaxed">
+                <p data-story="matter" className="max-w-[62ch] scroll-mt-4 leading-relaxed">
                   The matter is open, and its parties are now part of every future conflict check. These are the two requests that would create the client and
                   the matter in Clio. In this demo they are recorded, not sent.
                 </p>
@@ -259,6 +281,13 @@ export default async function LeadPage({ params }: PageProps<"/staff/leads/[id]"
                     </details>
                   ))}
                 </div>
+                <p className="demo-note mt-5 max-w-[38rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
+                  That is the whole path, from a first message to an open matter.{" "}
+                  <Link href="/about" className="link">
+                    What you just saw, and what a real version connects to
+                  </Link>
+                  .
+                </p>
               </>
             )}
           </Step>
@@ -303,7 +332,9 @@ function Step(props: { n: number; title: string; state: StepState; summary: stri
       <div className={last ? "" : "pb-10"}>
         <h2 className={`flex min-h-9 flex-wrap items-baseline gap-x-3 pt-1 ${open ? "" : "text-muted"}`}>
           <span className="font-serif text-[1.375rem] font-semibold leading-tight">{title}</span>
-          <span className="text-[0.9375rem] font-normal text-muted">{state === "skipped" ? "Not reached" : summary}</span>
+          <span className="text-[0.9375rem] font-normal text-muted">
+            <Flash value={state === "skipped" ? "Not reached" : summary}>{state === "skipped" ? "Not reached" : summary}</Flash>
+          </span>
         </h2>
         {open && children && <div className="mt-4">{children}</div>}
       </div>

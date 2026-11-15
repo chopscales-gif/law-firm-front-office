@@ -1,5 +1,6 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import {
+  chatSessions,
   documents,
   leads,
   matters,
@@ -11,6 +12,7 @@ import {
   type Lead,
   type Matter,
   type OutboxMessage,
+  type ChatSession,
   type Party,
   type SignatureEvent,
   type SignatureRequest,
@@ -91,4 +93,14 @@ export async function listMatters(ctx: Ctx): Promise<MatterWithParties[]> {
     ...matter,
     parties: partyRows.filter((p) => p.matterId === matter.id).sort((a, b) => order[a.role] - order[b.role]),
   }));
+}
+
+/**
+ * The conversation to put back on the client side after a reload, or when the
+ * visitor carries on from a second device: the sandbox's most recent one, if
+ * it is still unfinished. A finished conversation starts a fresh chat.
+ */
+export async function unfinishedChat(ctx: Ctx): Promise<ChatSession | null> {
+  const [latest] = await ctx.db.select().from(chatSessions).where(eq(chatSessions.sandboxId, ctx.sandboxId)).orderBy(desc(chatSessions.createdAt)).limit(1);
+  return latest && latest.state.status === "collecting" && latest.messages.some((m) => m.role === "visitor") ? latest : null;
 }

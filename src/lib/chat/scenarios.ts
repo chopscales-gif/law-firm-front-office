@@ -56,3 +56,10 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 ];
+
+/**
+ * Offered beside the scripted conversations, so a visitor can try to get legal
+ * advice out of the assistant and watch it decline. Both are caught by the
+ * guardrail whether they open a conversation or interrupt one.
+ */
+export const ADVICE_QUESTIONS = ["Can my ex take the kids out of state?", "How much child support will I get?"];

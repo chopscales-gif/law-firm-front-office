@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-import { FIRM } from "../intake";
+import type { Firm } from "../intake";
 import type { Block } from "./templates";
 
 export type PdfSignature = {
@@ -13,6 +13,8 @@ export type PdfSignature = {
 export type PdfAuditEvent = { at: Date; label: string };
 
 export type LetterPdfInput = {
+  /** The firm as named on this letter when it was written. */
+  firm: Firm;
   blocks: Block[];
   signature: PdfSignature | null;
   audit: PdfAuditEvent[];
@@ -60,7 +62,9 @@ function formatStamp(at: Date): string {
 export async function buildLetterPdf(input: LetterPdfInput): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle("Engagement letter (demonstration)");
-  pdf.setAuthor(`${FIRM.name} (fictional firm, demonstration build)`);
+  const { firm } = input;
+  // A name the visitor typed is theirs, so the file must not call it fictional or name them as its author.
+  pdf.setAuthor(firm.custom ? "ChopMedia demonstration build" : `${firm.name} (fictional firm, demonstration build)`);
 
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
@@ -72,7 +76,8 @@ export async function buildLetterPdf(input: LetterPdfInput): Promise<Uint8Array>
   let y = 0;
 
   const footer = (target: PDFPage) => {
-    target.drawText("Demonstration document. Fictional firm and client. Not a legal form and not legal advice.", {
+    const what = firm.custom ? "Invented client and sample terms." : "Fictional firm and client.";
+    target.drawText(`Demonstration document. ${what} Not a legal form and not legal advice.`, {
       x: PAGE.marginX,
       y: 44,
       size: 8,
@@ -86,9 +91,12 @@ export async function buildLetterPdf(input: LetterPdfInput): Promise<Uint8Array>
     footer(page);
     y = PAGE.height - PAGE.marginTop;
     if (letterhead) {
-      page.drawText(FIRM.name, { x: PAGE.marginX, y, size: 20, font: serifBold, color: PETROL });
+      // A long name is set smaller so it stays on one line inside the margins.
+      const name = safe(firm.name);
+      const size = Math.min(20, (20 * contentWidth) / serifBold.widthOfTextAtSize(name, 20));
+      page.drawText(name, { x: PAGE.marginX, y, size, font: serifBold, color: PETROL });
       y -= 16;
-      page.drawText(safe(`${FIRM.address}  |  ${FIRM.phone}  |  ${FIRM.email}`), { x: PAGE.marginX, y, size: 8.5, font: sans, color: MUTED });
+      page.drawText(safe(`${firm.address}  |  ${firm.phone}  |  ${firm.email}`), { x: PAGE.marginX, y, size: 8.5, font: sans, color: MUTED });
       y -= 10;
       page.drawLine({ start: { x: PAGE.marginX, y }, end: { x: PAGE.width - PAGE.marginX, y }, thickness: 0.75, color: PETROL });
       y -= 28;
@@ -132,7 +140,7 @@ export async function buildLetterPdf(input: LetterPdfInput): Promise<Uint8Array>
   // Signature block.
   ensure(170);
   y -= 8;
-  drawLines(["Yours sincerely,", "", safe(FIRM.attorney), safe(FIRM.name)], serif, 11, 15);
+  drawLines(["Yours sincerely,", "", safe(firm.attorney), safe(firm.name)], serif, 11, 15);
   y -= 24;
   drawLines(["Agreed and accepted:"], serifBold, 11, 15);
   y -= 36;

@@ -1,4 +1,5 @@
 import { buildLetterPdf } from "@/lib/documents/pdf";
+import { firmOnLetter } from "@/lib/intake";
 import { findDocument, signatureFor } from "@/server/queries";
 import { getCtx } from "@/server/session";
 
@@ -22,6 +23,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/docu
       : null;
 
   const pdf = await buildLetterPdf({
+    firm: firmOnLetter(document.fields.firmName),
     blocks: document.blocks,
     signature,
     audit: state?.events.map((event) => ({ at: event.at, label: event.label })) ?? [],

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { offerSlots } from "@/lib/chat/engine";
+import { mountainOffsetHours, offerSlots } from "@/lib/chat/engine";
 import type { IntakeData } from "@/lib/intake";
 import { checkLeadForConflicts, createLead, createLetter, decide, sendForSignature, sign, type Ctx } from "@/server/workflow";
 import { matters, parties } from "./schema";
@@ -165,9 +165,62 @@ function weekday(date: Date): Date {
   return new Date(date.getTime() - (day === 0 ? 2 : day === 6 ? 1 : 0) * DAY);
 }
 
+type Clock = [hour: number, minute: number];
+
+/** The calendar day in Salt Lake City at this moment, held as midnight UTC of that date. */
+function firmDay(at: Date): Date {
+  const local = new Date(at.getTime() - mountainOffsetHours(at) * 3600_000);
+  return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()));
+}
+
+/** A clock time in Salt Lake City on a day from firmDay. */
+function firmTime(day: Date, [hour, minute]: Clock): Date {
+  const noon = new Date(day.getTime() + 19 * 3600_000);
+  return new Date(day.getTime() + (hour + mountainOffsetHours(noon)) * 3600_000 + minute * 60_000);
+}
+
+/** Minutes past midnight in Salt Lake City. */
+function firmMinutes(at: Date): number {
+  return Math.round((at.getTime() - firmTime(firmDay(at), [0, 0]).getTime()) / 60_000);
+}
+
+/** The working day a number of working days before (negative) or after (positive) this one. */
+function workdaysFrom(day: Date, count: number): Date {
+  const moved = new Date(day);
+  for (let left = Math.abs(count); left > 0; ) {
+    moved.setUTCDate(moved.getUTCDate() + Math.sign(count));
+    if (moved.getUTCDay() !== 0 && moved.getUTCDay() !== 6) left -= 1;
+  }
+  return moved;
+}
+
+/**
+ * When the office first deals with something that arrived at this time: half
+ * an hour later during office hours, otherwise first thing on the next working day.
+ */
+function officePicksUp(arrived: Date): Date {
+  const day = firmDay(arrived);
+  const minutes = firmMinutes(arrived);
+  const workday = day.getUTCDay() !== 0 && day.getUTCDay() !== 6;
+  if (workday && minutes >= 8 * 60 + 30 && minutes <= 16 * 60 + 30) return new Date(arrived.getTime() + 35 * 60_000);
+  return firmTime(workday && minutes < 8 * 60 + 30 ? day : workdaysFrom(day, 1), [8, 50]);
+}
+
+/** People write in from early morning to late evening. A time in the small hours moves back to the evening before. */
+function wakingHours(at: Date): Date {
+  const day = firmDay(at);
+  const minutes = firmMinutes(at);
+  if (minutes < 6 * 60 + 30) return firmTime(new Date(day.getTime() - DAY), [22, 30]);
+  return minutes > 22 * 60 + 30 ? firmTime(day, [22, 30]) : at;
+}
+
 type SeedLead = {
-  /** Hours before "now" that the inquiry arrived. */
-  hoursAgo: number;
+  /**
+   * When the inquiry arrived. Older ones are pinned to a time of day some
+   * working days back, so the record never shows the office at work at 3 a.m.
+   * Today's are a number of hours before "now", kept inside waking hours.
+   */
+  arrived: { workdaysAgo: number; at: Clock } | { hoursAgo: number };
   channel: "chat" | "form" | "phone";
   intake: Omit<IntakeData, "consultAt"> & { consultSlot: number | null };
   /** How far through the workflow this inquiry has already been taken. */
@@ -177,7 +230,7 @@ type SeedLead = {
 
 const SEED_LEADS: SeedLead[] = [
   {
-    hoursAgo: 9 * 24,
+    arrived: { workdaysAgo: 7, at: [19, 42] },
     channel: "chat",
     stage: "signed",
     intake: {
@@ -188,7 +241,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 52,
+    arrived: { workdaysAgo: 3, at: [12, 18] },
     channel: "chat",
     stage: "letter_sent",
     intake: {
@@ -199,7 +252,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 30,
+    arrived: { workdaysAgo: 2, at: [13, 5] },
     channel: "form",
     stage: "flagged",
     note: "Other side is Elizabeth Park, our client in the custody modification. Do not proceed. N.A. to send a declination.",
@@ -211,7 +264,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 26,
+    arrived: { workdaysAgo: 1, at: [10, 40] },
     channel: "phone",
     stage: "declined",
     note: "Lives in Idaho and the case is filed there. Outside our jurisdiction. Declination sent.",
@@ -223,7 +276,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 20,
+    arrived: { workdaysAgo: 1, at: [16, 15] },
     channel: "chat",
     stage: "cleared",
     intake: {
@@ -234,7 +287,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 5,
+    arrived: { hoursAgo: 5 },
     channel: "chat",
     stage: "new",
     intake: {
@@ -245,7 +298,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 2,
+    arrived: { hoursAgo: 2 },
     channel: "chat",
     stage: "new",
     intake: {
@@ -257,7 +310,7 @@ const SEED_LEADS: SeedLead[] = [
     },
   },
   {
-    hoursAgo: 0.6,
+    arrived: { hoursAgo: 0.6 },
     channel: "form",
     stage: "new",
     intake: {
@@ -271,7 +324,7 @@ const SEED_LEADS: SeedLead[] = [
 
 /** Fills a new sandbox by running real inquiries through the real workflow, back-dated. */
 export async function seedSandbox(ctx: Ctx): Promise<void> {
-  const { db, sandboxId, now } = ctx;
+  const { db, sandboxId, now, firm } = ctx;
 
   const matterRows = SEED_MATTERS.map((m) => ({
     id: randomUUID(),
@@ -299,29 +352,47 @@ export async function seedSandbox(ctx: Ctx): Promise<void> {
     ),
   );
 
+  // Today's inquiries are placed newest first, each at least 80 minutes before the one after it, so the order holds when one is moved to the evening before.
+  const arrivals = new Map<SeedLead, Date>();
+  let latest = now.getTime();
+  for (const seed of [...SEED_LEADS].reverse()) {
+    if ("workdaysAgo" in seed.arrived) {
+      arrivals.set(seed, firmTime(workdaysFrom(firmDay(now), -seed.arrived.workdaysAgo), seed.arrived.at));
+      continue;
+    }
+    const arrived = new Date(Math.min(latest, wakingHours(new Date(now.getTime() - seed.arrived.hoursAgo * 3600_000)).getTime()));
+    arrivals.set(seed, arrived);
+    latest = arrived.getTime() - 80 * 60_000;
+  }
+
   // Each seeded inquiry is offered the times still free when it arrives, like a real one.
   const taken: string[] = [];
   for (const seed of SEED_LEADS) {
-    const arrived = new Date(now.getTime() - seed.hoursAgo * 3600_000);
-    const at = (minutesLater: number): Ctx => ({ db, sandboxId, now: new Date(Math.min(now.getTime(), arrived.getTime() + minutesLater * 60_000)) });
+    const arrived = arrivals.get(seed)!;
+    // Nothing in the sample data is dated after the moment the visitor arrives.
+    const at = (when: Date): Ctx => ({ db, sandboxId, firm, now: new Date(Math.min(now.getTime(), when.getTime())) });
     const { consultSlot, ...rest } = seed.intake;
     const consultAt = consultSlot === null ? null : offerSlots(now, taken)[consultSlot].iso;
     if (consultAt) taken.push(consultAt);
-    const lead = await createLead(at(0), { ...rest, consultAt }, seed.channel);
+    const lead = await createLead(at(arrived), { ...rest, consultAt }, seed.channel);
     if (seed.stage === "new") continue;
 
-    await checkLeadForConflicts(at(35), lead.id);
+    const checked = officePicksUp(arrived);
+    const decided = new Date(checked.getTime() + 15 * 60_000);
+    await checkLeadForConflicts(at(checked), lead.id);
     if (seed.stage === "checked") continue;
     if (seed.stage === "flagged" || seed.stage === "declined") {
-      await decide(at(50), lead.id, seed.stage, seed.note ?? "");
+      await decide(at(decided), lead.id, seed.stage, seed.note ?? "");
       continue;
     }
-    await decide(at(50), lead.id, "cleared", seed.note ?? "");
+    await decide(at(decided), lead.id, "cleared", seed.note ?? "");
     if (seed.stage === "cleared") continue;
 
-    await createLetter(at(26 * 60), lead.id);
-    const request = await sendForSignature(at(26 * 60 + 5), lead.id);
+    // The letter goes out the afternoon of the next working day, and the client signs it that evening.
+    const letterDay = workdaysFrom(firmDay(decided), 1);
+    await createLetter(at(firmTime(letterDay, [14, 20])), lead.id);
+    const request = await sendForSignature(at(firmTime(letterDay, [14, 25])), lead.id);
     if (seed.stage === "letter_sent") continue;
-    await sign(at(31 * 60), request.token, { kind: "typed", data: lead.name, consent: true });
+    await sign(at(firmTime(letterDay, [18, 7])), request.token, { kind: "typed", data: lead.name, consent: true });
   }
 }

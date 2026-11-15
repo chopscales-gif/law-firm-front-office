@@ -20,6 +20,13 @@ export default async function OutboxPage() {
         out through the firm&apos;s email provider, a text messaging service and the Clio API.
       </PageHeader>
 
+      {ctx.firm.custom && (
+        <p className="demo-note mb-6 max-w-[60rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
+          Messages written from now on carry {ctx.firm.name}. Anything written earlier keeps the name it was written with, as a sent message would. The email
+          addresses and the people stay invented.
+        </p>
+      )}
+
       {messages.length === 0 ? (
         <p className="py-8 text-muted">Nothing has been sent yet.</p>
       ) : (

@@ -13,8 +13,9 @@ const STRENGTH = { strong: "Strong match", probable: "Probable match", weak: "We
 /**
  * Conflict search results. Each row puts the name from the inquiry next to the
  * name on file, says why the two were matched, and what the pairing means.
+ * `searched` says where the first name came from: an inquiry, or a search someone typed.
  */
-export function HitList({ hits }: { hits: ConflictHit[] }) {
+export function HitList({ hits, searched = "In this inquiry" }: { hits: ConflictHit[]; searched?: string }) {
   if (!hits.length) return null;
   return (
     <ul className="space-y-4">
@@ -33,7 +34,7 @@ export function HitList({ hits }: { hits: ConflictHit[] }) {
 
               <div className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:items-start">
                 <div>
-                  <p className="text-[0.9375rem] text-muted">In this inquiry: {SUBJECT_ROLE[hit.subject.role].toLowerCase()}</p>
+                  <p className="text-[0.9375rem] text-muted">{searched}: {SUBJECT_ROLE[hit.subject.role].toLowerCase()}</p>
                   <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-medium"}`}>{hit.subject.name}</p>
                 </div>
                 <p className="text-[0.9375rem] italic text-muted sm:pt-7 sm:text-center">matches</p>

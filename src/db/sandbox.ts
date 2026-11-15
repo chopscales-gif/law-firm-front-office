@@ -1,4 +1,5 @@
-import { asc, count, eq, inArray, lt } from "drizzle-orm";
+import { asc, count, eq, inArray, lt, sql } from "drizzle-orm";
+import { DEMO_FIRM } from "@/lib/intake";
 import type { Db } from "./client";
 import { sandboxes } from "./schema";
 import { seedSandbox } from "./seed";
@@ -11,20 +12,58 @@ const PURGE_BATCH = 20;
 
 /**
  * Makes sure this visitor has a seeded sandbox. Safe to call on every request:
- * after the first call it is a single primary-key lookup.
+ * after the first call it is a single primary-key lookup. Returns the firm
+ * name the visitor typed, or null while the demo shows the fictional firm.
  */
-export async function ensureSandbox(db: Db, sandboxId: string, now = new Date()): Promise<void> {
-  const [existing] = await db.select({ id: sandboxes.id }).from(sandboxes).where(eq(sandboxes.id, sandboxId));
-  if (existing) return;
+export async function ensureSandbox(db: Db, sandboxId: string, now = new Date()): Promise<string | null> {
+  const [existing] = await db.select({ firmName: sandboxes.firmName }).from(sandboxes).where(eq(sandboxes.id, sandboxId));
+  if (existing) return existing.firmName;
 
   // Insert and seed in one transaction. A concurrent request for the same new
   // visitor waits on the insert, then sees the finished sandbox and skips seeding.
   await db.transaction(async (tx) => {
     const inserted = await tx.insert(sandboxes).values({ id: sandboxId, createdAt: now }).onConflictDoNothing().returning();
-    if (inserted.length) await seedSandbox({ db: tx as unknown as Db, sandboxId, now });
+    // The sample data is always written under the fictional firm's name.
+    if (inserted.length) await seedSandbox({ db: tx as unknown as Db, sandboxId, now, firm: DEMO_FIRM });
   });
 
   await purge(db, sandboxId, now);
+  return null;
+}
+
+/** The firm name a visitor typed, without creating anything. Null for the fictional firm or an unknown sandbox. */
+export async function firmNameOf(db: Db, sandboxId: string): Promise<string | null> {
+  const [row] = await db.select({ firmName: sandboxes.firmName }).from(sandboxes).where(eq(sandboxes.id, sandboxId));
+  return row?.firmName ?? null;
+}
+
+/** Stores the visitor's firm name, or null to go back to the fictional firm. */
+export async function setFirmName(db: Db, sandboxId: string, firmName: string | null): Promise<void> {
+  await db.update(sandboxes).set({ firmName }).where(eq(sandboxes.id, sandboxId));
+}
+
+/**
+ * What a device compares to know whether the sandbox changed since it last
+ * looked. It includes the creation time, so a reset reads as a change too.
+ */
+export type SandboxStamp = string;
+
+const stampOf = (row: { createdAt: Date; revision: number }): SandboxStamp => `${row.createdAt.getTime()}.${row.revision}`;
+
+/** Records that the visitor changed something. Returns the new stamp, or null if the sandbox is gone. */
+export async function touchSandbox(db: Db, sandboxId: string): Promise<SandboxStamp | null> {
+  const [row] = await db
+    .update(sandboxes)
+    .set({ revision: sql`${sandboxes.revision} + 1` })
+    .where(eq(sandboxes.id, sandboxId))
+    .returning({ createdAt: sandboxes.createdAt, revision: sandboxes.revision });
+  return row ? stampOf(row) : null;
+}
+
+/** The current stamp, read with one primary-key lookup. Null if the sandbox does not exist. */
+export async function sandboxStamp(db: Db, sandboxId: string): Promise<SandboxStamp | null> {
+  const [row] = await db.select({ createdAt: sandboxes.createdAt, revision: sandboxes.revision }).from(sandboxes).where(eq(sandboxes.id, sandboxId));
+  return row ? stampOf(row) : null;
 }
 
 /**

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Flash } from "@/components/flash";
 import { PageHeader, Score, StatusChip } from "@/components/ui";
 import type { LeadStatus } from "@/db/schema";
 import { formatSlot } from "@/lib/chat/engine";
@@ -69,6 +70,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
               <li key={lead.id} className="border-b border-line">
                 <Link
                   href={`/staff/leads/${lead.id}`}
+                  data-story-lead={lead.id}
                   className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 px-1 py-4 hover:bg-surface md:px-3 md:py-3.5 ${COLUMNS} ${
                     lead.safetyConcern && lead.status === "new" ? "shadow-[inset_4px_0_0_var(--color-flag)]" : ""
                   }`}
@@ -91,7 +93,9 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/staff"
                     <p className="text-muted">{consult(lead)}</p>
                   </div>
                   <div className="justify-self-end md:justify-self-start">
-                    <StatusChip status={lead.status} />
+                    <Flash value={lead.status}>
+                      <StatusChip status={lead.status} />
+                    </Flash>
                   </div>
                 </Link>
               </li>
