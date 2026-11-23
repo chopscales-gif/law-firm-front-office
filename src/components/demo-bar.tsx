@@ -44,6 +44,9 @@ export function DemoBar({ firm }: { firm: Firm }) {
     <div ref={bar} className="border-b border-line bg-surface text-[0.9375rem] text-ink">
       <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 px-4 py-2 sm:px-6 sm:py-1.5">
         <p className="min-w-0 flex-1 basis-64 pr-3 leading-snug">
+          <a href="https://chopmedia.vercel.app/#law-firm" className="mr-3 whitespace-nowrap font-semibold underline decoration-edge underline-offset-4 hover:decoration-ink">
+            ← All demos
+          </a>{" "}
           <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-green align-middle" />
           <strong className="font-semibold">Demonstration build.</strong>{" "}
           <span className="text-muted">
