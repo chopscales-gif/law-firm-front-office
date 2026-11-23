@@ -370,7 +370,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
       {children}
       {running && <Spotlight />}
       {(running || closing) && (
-        <section aria-label="The story" className="on-dark rise-in fixed inset-x-2 bottom-2 z-50 mx-auto max-w-[46rem] rounded-lg bg-demo px-4 py-3.5 text-white shadow-[0_12px_40px_-8px_rgba(16,23,27,0.7)] sm:bottom-5 sm:px-5 sm:py-4">
+        <section aria-label="The story" className="on-dark rise-in fixed inset-x-2 bottom-2 z-50 mx-auto max-w-[46rem] rounded-2xl bg-demo px-4 py-3.5 text-white shadow-[0_12px_40px_-8px_rgba(16,23,27,0.7)] sm:bottom-5 sm:px-5 sm:py-4">
           {phase.kind === "running" && (
             <div className="flex items-center gap-4">
               <div aria-live="polite" className="min-w-0 flex-1">
@@ -379,7 +379,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
                 </p>
                 <p className="mt-0.5 text-[1.0625rem] font-semibold leading-snug sm:text-lg">{STORY_CAPTIONS[phase.step - 1]}</p>
               </div>
-              <button ref={stopButton} type="button" onClick={stop} className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-sm border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
+              <button ref={stopButton} type="button" onClick={stop} className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
                 Stop
               </button>
             </div>
@@ -389,10 +389,10 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
               <p className="text-[0.9375rem] text-white/75">Demonstration build. The story, finished</p>
               <p className="mt-0.5 text-[1.0625rem] font-semibold leading-snug sm:text-lg">{STORY_CAPTIONS[STORY_CAPTIONS.length - 1]}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link ref={closingControl} href="/about" className="inline-flex min-h-11 items-center rounded-sm bg-white px-4 font-semibold text-demo hover:bg-white/85">
+                <Link ref={closingControl} href="/about" className="inline-flex min-h-11 items-center rounded-full bg-white px-4 font-semibold text-demo hover:bg-white/85">
                   What you just saw
                 </Link>
-                <button type="button" onClick={stop} className="inline-flex min-h-11 cursor-pointer items-center rounded-sm border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
+                <button type="button" onClick={stop} className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
                   Close and look around
                 </button>
               </div>
@@ -402,7 +402,7 @@ export function StoryProvider({ children }: { children: React.ReactNode }) {
             <div role="alert">
               <p className="text-[1.0625rem] font-semibold leading-snug">The story stopped because the app took too long to answer.</p>
               <p className="mt-0.5 text-[0.9375rem] text-white/85">Everything up to here is saved, so you can carry on by hand from this page.</p>
-              <button ref={closingControl} type="button" onClick={stop} className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-sm border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
+              <button ref={closingControl} type="button" onClick={stop} className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
                 Close
               </button>
             </div>

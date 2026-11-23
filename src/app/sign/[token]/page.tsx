@@ -17,8 +17,8 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
 
   if (!view) {
     return (
-      <main className="w-full max-w-3xl flex-1 px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-        <h1 className="font-serif text-4xl font-medium leading-tight">This signing link does not work here</h1>
+      <main className="mx-auto w-full max-w-[82rem] flex-1 px-5 py-16 sm:px-8 lg:py-24">
+        <h1 className="display max-w-[20ch] text-[clamp(2.125rem,4.2vw,3.5rem)]">This signing link does not work here</h1>
         <p className="mt-4 max-w-[62ch] text-lg leading-relaxed text-muted">
           Each visitor to this demo gets their own private copy of the sample data, so a signing link only opens where that copy is open. The link also
           stops working when the demo is reset.
@@ -37,13 +37,21 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
 
   return (
     <>
-      <header className="on-dark bg-petrol text-white">
-        <div className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-5 sm:px-6 lg:px-10 lg:pb-10 lg:pt-8">
-          <p className="font-serif text-[1.375rem] font-semibold leading-tight [overflow-wrap:anywhere]">{firm.name}</p>
-          <h1 className="mt-7 max-w-[24ch] font-serif text-[2rem] font-medium leading-[1.1] tracking-[-0.015em] sm:text-5xl">
-            {signed ? "Thank you. Your letter is signed." : `${request.signerName}, please read and sign your engagement letter.`}
+      <header className="bg-gradient-to-b from-stone to-surface">
+        <div className="mx-auto w-full max-w-[72rem] px-5 pb-6 pt-5 sm:px-8 lg:pb-8">
+          <p className="font-serif text-[1.5625rem] font-normal leading-none tracking-[-0.01em] [overflow-wrap:anywhere]">{firm.name}</p>
+          <h1 className="display mt-10 max-w-[22ch] text-[clamp(2.125rem,4.2vw,3.5rem)]">
+            {signed ? (
+              <>
+                Thank you. <span className="accent">Your letter is signed.</span>
+              </>
+            ) : (
+              <>
+                {request.signerName}, <span className="accent">please read and sign your engagement letter.</span>
+              </>
+            )}
           </h1>
-          <p className="mt-4 max-w-[58ch] text-lg leading-relaxed text-white/85">
+          <p className="mt-4 max-w-[58ch] text-lg leading-relaxed text-muted">
             {signed ? (
                 `Signed ${request.signedAt ? fmtDateTime(request.signedAt) : ""}. A real installation would email you a copy and tell the firm. This demo sends nothing.`
               ) : (
@@ -54,14 +62,14 @@ export default async function SignPage({ params }: PageProps<"/sign/[token]">) {
               )}
           </p>
           {signed && (
-            <a href={`/api/documents/${document.id}/pdf`} target="_blank" className="btn mt-6 bg-white text-petrol hover:bg-lake-tint">
+            <a href={`/api/documents/${document.id}/pdf`} target="_blank" className="btn btn-primary mt-6">
               Open your signed copy
             </a>
           )}
         </div>
       </header>
 
-      <main className={`mx-auto grid w-full max-w-[72rem] flex-1 items-start gap-x-10 gap-y-8 px-4 py-8 sm:px-6 lg:px-10 lg:py-10 ${signed ? "lg:grid-cols-[minmax(0,1fr)_20rem]" : "lg:grid-cols-[minmax(0,1fr)_24rem]"}`}>
+      <main className={`mx-auto grid w-full max-w-[72rem] flex-1 items-start gap-x-10 gap-y-8 px-5 py-8 sm:px-8 lg:py-10 ${signed ? "lg:grid-cols-[minmax(0,1fr)_20rem]" : "lg:grid-cols-[minmax(0,1fr)_24rem]"}`}>
         {firm.name !== ctx.firm.name && (
           <p className="demo-note col-span-full max-w-[44rem] px-4 py-3 text-[0.9375rem] leading-relaxed">
             This letter was written before the firm name on the demo was changed, so it keeps the name it was written with, as a letter already sent would.

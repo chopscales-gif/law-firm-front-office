@@ -9,7 +9,7 @@ import { liveRefresh } from "./live-updates";
 import { chatHandle, STORY_PACE } from "./story";
 
 type Props = {
-  /** Printed at the head of the sheet, as on the firm's letterhead. */
+  /** Read out with the sheet's title; the greeting names the firm in full. */
   firmName: string;
   opening: ChatMessage[];
   openingSuggestions: string[];
@@ -222,35 +222,51 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
   const finished = status !== "collecting";
   const busy = pending || playing !== null;
 
-  const label = "text-xs font-semibold uppercase tracking-[0.14em]";
-
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 short:gap-3">
-      <section ref={section} data-story="chat" aria-label="Intake assistant" className="sheet scroll-mt-3 flex h-[44rem] max-h-[92svh] min-h-0 flex-col px-5 pb-5 pt-7 sm:px-12 sm:pt-10 lg:h-auto lg:max-h-none lg:flex-1 short:pt-6">
-        <header className="border-b border-petrol pb-4 text-center short:pb-3">
-          <h2 className="font-serif text-[1.375rem] leading-tight text-petrol [overflow-wrap:anywhere]">
-            {firmName} <span className="sr-only">Start your inquiry</span>
+    <div className="flex min-w-0 flex-col">
+      <section
+        ref={section}
+        id="inquiry"
+        data-story="chat"
+        aria-label="Intake assistant"
+        className="sheet flex h-[38rem] max-h-[86svh] min-h-0 scroll-mt-4 flex-col gap-4 p-5 sm:p-7 short:h-[33rem]"
+      >
+        <header className="flex items-baseline justify-between gap-3">
+          <h2 className="font-semibold">
+            New client inquiry <span className="sr-only">with {firmName}</span>
           </h2>
-          <p className={`${label} mt-1.5 text-muted`}>New client inquiry</p>
+          <p className="text-sm text-faint">About two minutes</p>
         </header>
 
-        <div ref={log} role="log" aria-live="polite" className="-mx-2 flex-1 space-y-5 overflow-y-auto px-2 py-6 short:py-4">
-          {messages.map((message, i) => (
-            // The client's own words sit to the right on a tinted slip in plain type; the firm's run down the left in the letterhead's serif.
-            <div key={i} className={`message-in ${message.role === "visitor" ? "ml-auto w-fit max-w-[86%] rounded-sm border-r-2 border-petrol bg-lake-tint px-4 py-2.5 text-right" : "max-w-[94%]"}`}>
-              {message.guardrail && (
-                <p className={`mb-1.5 w-fit rounded-sm px-2 py-0.5 text-[0.8125rem] font-semibold text-white ${message.guardrail === "safety" ? "bg-flag" : "bg-demo"}`}>
-                  {GUARDRAIL_NOTE[message.guardrail]}
+        <div ref={log} role="log" aria-live="polite" className="-mx-2 flex-1 space-y-4 overflow-y-auto px-2 py-1">
+          {messages.map((message, i) => {
+            const visitor = message.role === "visitor";
+            // A short question from the firm is the thing to answer next, so it is set large in the serif.
+            const question = !visitor && message.text.length <= 80 && message.text.trimEnd().endsWith("?");
+            return (
+              // The client's own words sit to the right on a tinted slip; the firm's run down the left.
+              <div key={i} className={`message-in ${visitor ? "ml-auto w-fit max-w-[86%] rounded-2xl rounded-br-md bg-mint px-4 py-2.5" : "max-w-[94%]"}`}>
+                {message.guardrail && (
+                  <p className={`tag mb-1.5 text-white ${message.guardrail === "safety" ? "bg-flag" : "bg-demo"}`}>{GUARDRAIL_NOTE[message.guardrail]}</p>
+                )}
+                <p
+                  className={
+                    visitor
+                      ? "font-medium leading-[1.45] text-forest [overflow-wrap:anywhere]"
+                      : question
+                        ? "font-serif text-[1.625rem] leading-[1.2] tracking-[-0.01em]"
+                        : "text-[1.0625rem] leading-normal"
+                  }
+                >
+                  <span className="sr-only">{visitor ? "You: " : "The firm: "}</span>
+                  {message.text}
                 </p>
-              )}
-              <p className={`${label} ${message.role === "visitor" ? "text-petrol" : "text-lake"}`}>{message.role === "visitor" ? "You" : "The firm"}</p>
-              <p className={message.role === "visitor" ? "mt-0.5 text-left text-lg font-semibold leading-[1.45] text-petrol [overflow-wrap:anywhere]" : "mt-1 font-serif text-[1.1875rem] leading-[1.55]"}>{message.text}</p>
-            </div>
-          ))}
+              </div>
+            );
+          })}
           {pending && (
             <div className="message-in">
-              <p className={`${label} text-lake`}>The firm</p>
-              <p className="typing mt-2.5" role="status">
+              <p className="typing" role="status">
                 <span className="sr-only">The assistant is replying</span>
                 <i aria-hidden />
                 <i aria-hidden />
@@ -262,7 +278,7 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
             <div className="demo-note message-in p-4">
               <p className="font-semibold">This inquiry is now in the firm&apos;s pipeline.</p>
               <p className="mt-1 text-[0.9375rem] text-muted">It has been scored, and the messages the firm would send are in the outbox.</p>
-              <Link href={`/staff/leads/${leadId}`} className="btn btn-primary mt-3">
+              <Link href={`/staff/leads/${leadId}`} className="btn btn-primary btn-small mt-3">
                 See it on the firm side
               </Link>
             </div>
@@ -270,20 +286,20 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
         </div>
 
         {error && (
-          <p role="alert" className="mb-3 bg-flag-tint px-4 py-2 text-[0.9375rem] text-flag">
+          <p role="alert" className="rounded-xl bg-flag-tint px-4 py-2 text-[0.9375rem] text-flag">
             {error}
           </p>
         )}
 
         {!finished && suggestions.length > 0 && !playing && (
-          <div className="flex flex-wrap gap-2 pb-4">
+          <div className="grid max-h-[13.5rem] grid-cols-2 gap-2 overflow-y-auto">
             {suggestions.map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
                 disabled={busy}
                 onClick={() => void send(suggestion)}
-                className="min-h-11 cursor-pointer rounded-sm border border-petrol/50 px-3.5 text-[0.9375rem] font-semibold text-petrol hover:border-petrol hover:bg-lake-tint disabled:opacity-50"
+                className="min-h-11 cursor-pointer rounded-xl border border-line px-3.5 py-2 text-left font-medium leading-snug shadow-rest hover:border-forest disabled:opacity-50"
               >
                 {suggestion}
               </button>
@@ -296,7 +312,7 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
             Start a new conversation
           </button>
         ) : (
-          <form onSubmit={submit} className="flex items-center gap-4 border-b-2 border-petrol focus-within:border-lake">
+          <form onSubmit={submit} className="flex items-center gap-2.5 rounded-full border border-edge py-1 pl-[1.125rem] pr-1 focus-within:border-fern">
             <label htmlFor="chat-input" className="sr-only">
               Your message
             </label>
@@ -311,19 +327,15 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
               placeholder={playing === STORY ? "Playing the story" : playing ? "Playing a scripted conversation" : "Write your answer here"}
               className="field-line"
             />
-            <button
-              type="submit"
-              disabled={busy || !draft.trim()}
-              className="min-h-11 shrink-0 cursor-pointer text-[0.9375rem] font-semibold uppercase tracking-[0.08em] text-petrol hover:text-lake disabled:cursor-not-allowed disabled:opacity-55"
-            >
-              Send <span aria-hidden>&rarr;</span>
+            <button type="submit" disabled={busy || !draft.trim()} className="btn btn-primary btn-small shrink-0">
+              Send
             </button>
           </form>
         )}
 
-        <div className="mt-3 flex items-start justify-between gap-4 text-sm leading-snug text-muted">
+        <div className="flex items-start justify-between gap-4 text-[0.84375rem] leading-snug text-muted">
           <p>
-            <strong className="font-semibold text-petrol">Automated intake assistant. Not a lawyer.</strong> {disclaimer}
+            <strong className="font-semibold text-ink">Automated intake assistant. Not a lawyer.</strong> {disclaimer}
           </p>
           {!finished && (
             <button type="button" onClick={restart} className="link shrink-0 cursor-pointer">
@@ -333,10 +345,10 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
         </div>
       </section>
 
-      {/* The demo's own note, clipped under the sheet so it never comes between the visitor and the inquiry. */}
-      <section aria-label="Demo scenarios" className="demo-note bg-transparent px-4 py-2.5 text-[0.9375rem] leading-snug">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="font-semibold">Short on time? Play a scripted conversation:</h2>
+      {/* The demo's own shortcuts, under the sheet so they never come between the visitor and the inquiry. */}
+      <section aria-label="Demo scenarios" className="mt-5 rounded-[0.875rem] bg-white/85 px-3 py-2.5 text-center text-[0.875rem] leading-snug text-[#3a4441]">
+        <h2>Short on time? Play a scripted conversation</h2>
+        <div className="flex flex-wrap items-baseline justify-center gap-x-4">
           {scenarios.map((scenario) => (
             <button
               key={scenario.key}
@@ -345,29 +357,31 @@ export function Chat({ firmName, opening, openingSuggestions, disclaimer, scenar
               onClick={() => void play(scenario)}
               disabled={playing !== null}
               aria-pressed={playing === scenario.key}
-              className={`min-h-11 cursor-pointer font-semibold underline underline-offset-[3px] disabled:cursor-not-allowed lg:min-h-0 ${
-                playing === scenario.key ? "text-ink decoration-ink" : "text-lake decoration-lake/50 hover:text-petrol disabled:opacity-50"
+              className={`min-h-11 cursor-pointer font-semibold disabled:cursor-not-allowed lg:min-h-7 ${
+                playing === scenario.key ? "text-ink underline underline-offset-[3px]" : "text-fern hover:underline hover:underline-offset-[3px] disabled:opacity-50"
               }`}
             >
               {scenario.title}
             </button>
           ))}
         </div>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1 short:hidden">
+        <div className="mt-1 border-t border-line pt-2 short:hidden">
           <p>
-            <strong className="font-semibold">Try to fool it.</strong> Ask for legal advice and watch it decline:
+            <strong className="font-semibold">Try to fool it.</strong> Ask for legal advice and watch it decline
           </p>
-          {adviceQuestions.map((question) => (
-            <button
-              key={question}
-              type="button"
-              disabled={busy || finished}
-              onClick={() => void send(question)}
-              className="min-h-11 cursor-pointer text-left font-semibold text-lake underline decoration-lake/50 underline-offset-[3px] hover:text-petrol disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-0"
-            >
-              {question}
-            </button>
-          ))}
+          <div className="flex flex-wrap items-baseline justify-center gap-x-4">
+            {adviceQuestions.map((question) => (
+              <button
+                key={question}
+                type="button"
+                disabled={busy || finished}
+                onClick={() => void send(question)}
+                className="min-h-11 cursor-pointer font-semibold text-fern hover:underline hover:underline-offset-[3px] disabled:cursor-not-allowed disabled:opacity-50 lg:min-h-7"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
     </div>

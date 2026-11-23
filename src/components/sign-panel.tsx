@@ -78,14 +78,14 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
   }
 
   const tab = (active: boolean) =>
-    `min-h-11 flex-1 cursor-pointer rounded-sm px-4 font-semibold ${active ? "bg-petrol text-white" : "text-petrol hover:bg-lake-tint"}`;
+    `min-h-10 flex-1 cursor-pointer rounded-full px-4 font-medium ${active ? "bg-surface text-ink shadow-rest" : "text-muted hover:text-ink"}`;
 
   return (
-    <form onSubmit={submit} data-story="sign-form" className="rounded-lg border-2 border-petrol bg-surface p-5 sm:p-6">
-      <h2 className="font-serif text-2xl font-semibold">Sign the letter</h2>
+    <form onSubmit={submit} data-story="sign-form" className="sheet p-5 sm:p-7">
+      <h2 className="font-serif text-[1.625rem] font-normal leading-tight tracking-[-0.01em]">Sign the letter</h2>
       <p className="mt-1 text-muted">Signing as {signerName}.</p>
 
-      <div role="group" aria-label="How to sign" className="mt-4 flex gap-1 rounded border-[1.5px] border-petrol/45 p-1">
+      <div role="group" aria-label="How to sign" className="mt-4 flex gap-0.5 rounded-full bg-stone p-1">
         <button type="button" aria-pressed={kind === "typed"} onClick={() => setKind("typed")} className={tab(kind === "typed")}>
           Type your name
         </button>
@@ -122,7 +122,7 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
             onPointerUp={() => (drawing.current = false)}
             onPointerCancel={() => (drawing.current = false)}
             aria-label="Signature drawing area"
-            className="mt-1.5 h-40 w-full touch-none rounded border-[1.5px] border-[#7c888e] bg-surface"
+            className="mt-1.5 h-40 w-full touch-none rounded-xl border border-edge bg-surface"
           />
           <button type="button" onClick={clearDrawing} className="link mt-1 inline-flex min-h-11 cursor-pointer items-center">
             Clear and start again
@@ -131,7 +131,7 @@ export function SignPanel({ token, signerName }: { token: string; signerName: st
       )}
 
       <label className="mt-4 flex min-h-11 cursor-pointer items-start gap-3 leading-relaxed">
-        <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 size-6 shrink-0 cursor-pointer accent-petrol" />
+        <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 size-6 shrink-0 cursor-pointer accent-forest" />
         <span>I agree to sign this letter electronically, and I understand my electronic signature has the same effect as signing on paper.</span>
       </label>
 

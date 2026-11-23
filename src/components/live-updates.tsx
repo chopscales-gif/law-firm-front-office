@@ -73,7 +73,7 @@ export function LiveUpdates() {
 
   return (
     <div role="status" className="pointer-events-none fixed inset-x-0 top-3 z-30 flex justify-center px-4">
-      {notice && <p className="on-dark rise-in rounded bg-demo px-4 py-2.5 text-[0.9375rem] font-semibold text-white shadow-lg">Updated just now from your other device</p>}
+      {notice && <p className="on-dark rise-in rounded-xl bg-demo px-4 py-2.5 text-[0.9375rem] font-semibold text-white shadow-lg">Updated just now from your other device</p>}
     </div>
   );
 }

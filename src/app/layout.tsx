@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Besley, Source_Sans_3 } from "next/font/google";
+import { Hanken_Grotesk, Newsreader } from "next/font/google";
 import { DemoBar } from "@/components/demo-bar";
 import { LiveUpdates } from "@/components/live-updates";
 import { StoryProvider } from "@/components/story";
 import { currentFirm } from "@/server/session";
 import "./globals.css";
 
-// Besley is a Clarendon, the face of old law-office signs and of the American West. Source Sans 3 is a
-// plain, open humanist sans that stays readable for a practice whose clients are often older.
-const sourceSans = Source_Sans_3({ variable: "--font-source-sans", subsets: ["latin"] });
-const besley = Besley({ variable: "--font-besley", subsets: ["latin"], style: ["normal", "italic"] });
+// Hanken Grotesk is a soft, round grotesque that stays readable at a light weight, for a practice whose
+// clients are often older. Newsreader carries the one serif phrase in each headline, and every figure.
+const hanken = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"] });
+const newsreader = Newsreader({ variable: "--font-newsreader", subsets: ["latin"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: { default: "Law firm front office (demo)", template: "%s | Law firm front office (demo)" },
@@ -24,7 +24,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Only the name is read here, without creating anything, so the bar can say honestly whose name is on the page.
   const firm = await currentFirm();
   return (
-    <html lang="en" className={`${sourceSans.variable} ${besley.variable} h-full antialiased`}>
+    <html lang="en" className={`${hanken.variable} ${newsreader.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <StoryProvider>
           <DemoBar firm={firm} />

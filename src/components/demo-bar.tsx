@@ -9,10 +9,10 @@ import { resetDemoAction, setFirmNameAction } from "@/server/actions";
 import { HandoffCard } from "./handoff";
 import { useStory } from "./story";
 
-const control = "inline-flex min-h-11 cursor-pointer items-center rounded-sm px-3 font-semibold sm:min-h-9";
-const outlined = `${control} border border-white/45 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60`;
-const plain = `${control} font-normal text-white/85 hover:bg-white/15 hover:text-white disabled:opacity-60`;
-const underlined = `${control} underline decoration-white/50 underline-offset-4 hover:decoration-white disabled:opacity-60`;
+const control = "inline-flex min-h-11 cursor-pointer items-center rounded-full px-3 font-medium sm:min-h-9";
+const outlined = `${control} border border-edge hover:border-forest disabled:cursor-not-allowed disabled:opacity-60`;
+const plain = `${control} text-muted hover:bg-stone hover:text-ink disabled:opacity-60`;
+const underlined = `${control} underline decoration-edge underline-offset-4 hover:decoration-ink disabled:opacity-60`;
 
 /**
  * The strip across the top of every page. It is the only part of the screen
@@ -38,28 +38,28 @@ export function DemoBar({ firm }: { firm: Firm }) {
   }, []);
 
   const tab = (active: boolean) =>
-    `inline-flex min-h-11 items-center rounded-sm px-3.5 font-semibold sm:min-h-9 ${active ? "bg-white text-demo" : "text-white hover:bg-white/15"}`;
+    `inline-flex min-h-11 items-center rounded-full px-3.5 font-medium sm:min-h-8 ${active ? "bg-surface text-ink shadow-rest" : "text-muted hover:text-ink"}`;
 
   return (
-    <div ref={bar} className="on-dark bg-demo text-[0.9375rem] text-white">
+    <div ref={bar} className="border-b border-line bg-surface text-[0.9375rem] text-ink">
       <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 px-4 py-2 sm:px-6 sm:py-1.5">
         <p className="min-w-0 flex-1 basis-64 pr-3 leading-snug">
-          <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-lake-pale align-middle" />
+          <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-green align-middle" />
           <strong className="font-semibold">Demonstration build.</strong>{" "}
-          <span className="text-white/80">
+          <span className="text-muted">
             {/* A visitor's own firm is real, so with their name showing the bar says whose data is invented, and never that the firm is. */}
             {firm.custom
               ? "Your firm's name is shown on invented sample data. Nothing is sent."
               : `${FIRM.shortName} is a fictional firm, the data is invented, and nothing is sent.`}
           </span>{" "}
-          <span className="hidden text-white/70 2xl:inline">Built by ChopMedia.</span>{" "}
+          <span className="hidden text-faint 2xl:inline">Built by ChopMedia.</span>{" "}
           {/* On a phone there is no room for this link among the controls, so it closes the sentence. */}
-          <Link href="/about" className="whitespace-nowrap font-semibold underline decoration-white/50 underline-offset-4 md:hidden">
+          <Link href="/about" className="whitespace-nowrap font-semibold underline decoration-edge underline-offset-4 md:hidden">
             About this demo
           </Link>
         </p>
         {/* Last on a laptop, where it ends the strip. On a phone it stays beside the notice. */}
-        <nav aria-label="Demo view" className="flex items-center gap-1 rounded border border-white/30 p-1 sm:p-0.5 lg:order-last lg:ml-2">
+        <nav aria-label="Demo view" className="flex items-center gap-0.5 rounded-full bg-stone p-1 lg:order-last lg:ml-2">
           <Link href="/" className={tab(!firmSide)} aria-current={!firmSide ? "page" : undefined}>
             Client side
           </Link>
@@ -72,7 +72,7 @@ export function DemoBar({ firm }: { firm: Firm }) {
           data-story="play"
           onClick={story.start}
           disabled={story.busy}
-          className={`${control} gap-2 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60 max-lg:bg-white max-lg:text-demo`}
+          className={`${control} gap-2 bg-forest px-4 text-white hover:bg-fern disabled:cursor-not-allowed disabled:opacity-60`}
         >
           <svg aria-hidden viewBox="0 0 12 12" className="size-3 fill-current">
             <path d="M2 1l9 5-9 5z" />
@@ -88,7 +88,7 @@ export function DemoBar({ firm }: { firm: Firm }) {
           <ResetButton />
         </form>
         {story.error && (
-          <p role="alert" className="order-last basis-full pb-1 font-semibold text-white">
+          <p role="alert" className="order-last basis-full pb-1 font-semibold text-flag">
             {story.error}
           </p>
         )}
@@ -124,7 +124,7 @@ function FirmName({ firm }: { firm: Firm }) {
     return (
       <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1">
         <p className="min-w-0 max-w-full px-1 leading-snug sm:max-w-[26rem] sm:truncate" title={firm.name}>
-          <span className="text-white/75">Shown as </span>
+          <span className="text-muted">Shown as </span>
           <strong className="font-semibold [overflow-wrap:anywhere]">{firm.name}</strong>
         </p>
         <button type="button" onClick={() => setEditing(true)} disabled={pending} className={underlined}>
@@ -134,7 +134,7 @@ function FirmName({ firm }: { firm: Firm }) {
           {pending ? "Putting it back" : `Back to ${FIRM.shortName}`}
         </button>
         {error && (
-          <p role="alert" className="basis-full font-semibold">
+          <p role="alert" className="basis-full font-semibold text-flag">
             {error}
           </p>
         )}
@@ -162,7 +162,7 @@ function FirmName({ firm }: { firm: Firm }) {
           autoComplete="organization"
           placeholder="Optional"
           aria-describedby={error ? "firm-name-error" : undefined}
-          className="min-h-11 w-full min-w-0 rounded-sm border border-white/60 bg-white px-3 text-base text-ink placeholder:text-[#5d696f] sm:min-h-9 sm:w-64"
+          className="min-h-11 w-full min-w-0 rounded-full border border-edge bg-white px-4 text-base text-ink placeholder:text-[#565d5a] sm:min-h-9 sm:w-64"
         />
         <button type="submit" disabled={pending} className={outlined}>
           {pending ? "Showing it" : "Show it"}
@@ -173,7 +173,7 @@ function FirmName({ firm }: { firm: Firm }) {
           </button>
         )}
         {error && (
-          <p id="firm-name-error" role="alert" className="basis-full font-semibold">
+          <p id="firm-name-error" role="alert" className="basis-full font-semibold text-flag">
             {error}
           </p>
         )}
@@ -203,7 +203,7 @@ function PhoneHandoff({ path }: { path: string }) {
         aria-labelledby="handoff-title"
         className="demo-dialog demo-note m-auto w-[min(34rem,calc(100vw-2rem))] p-6 text-base text-ink"
       >
-        <h2 id="handoff-title" className="font-serif text-2xl font-semibold leading-tight">
+        <h2 id="handoff-title" className="font-serif text-2xl font-normal leading-tight">
           Continue on your phone
         </h2>
         <div className="mt-4">

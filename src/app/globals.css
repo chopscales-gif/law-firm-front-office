@@ -4,58 +4,63 @@
 @custom-variant short (@media (min-width: 64rem) and (max-height: 56rem));
 
 /*
- * Alder & Finch. Colours come from the Great Salt Lake on a clear day: the deep petrol of
- * open water, the salt crust, the lighter teal of the shallows.
+ * Alder & Finch. A white page with wide margins. One dark green, kept for buttons and the
+ * few things that must be acted on; every other colour is a pale tint with its own ink,
+ * one tint per meaning.
  */
 @theme inline {
-  --color-ink: #14212a;
-  --color-petrol: #12384a;
-  --color-petrol-deep: #0b2836;
-  --color-lake: #17667a;
-  --color-lake-tint: #dcecef;
-  --color-lake-pale: #a9d6df;
-  --color-salt: #f2f5f5;
-  /* The client page is the firm's letterhead: warm stock, with the inquiry as a white sheet laid on it. */
-  --color-paper: #ece8df;
-  /* The firm side is software, not stationery: a cool desk, with each thing on its own white panel. */
-  --color-desk: #dfe6e8;
+  --color-ink: #16201e;
+  --color-forest: #0f2e2a;
+  --color-forest-deep: #0a211e;
+  /* The serif phrase in a headline, links and the focus ring. */
+  --color-fern: #1f5048;
+  --color-mint: #e3f4ef;
+  --color-mint-strong: #bfe6dc;
+  --color-stone: #f1f1ec;
   --color-surface: #ffffff;
-  --color-line: #d2dadd;
-  --color-muted: #4d5a62;
-  --color-flag: #b3261e;
-  --color-flag-tint: #fbe9e7;
-  --color-amber: #8a5a00;
-  --color-amber-tint: #fbf0d5;
+  --color-line: #e6e8e3;
+  /* The edge of something that can be pressed or typed into. */
+  --color-edge: #cfd3cc;
+  --color-muted: #5f6966;
+  --color-faint: #7b837f;
+  /* Each meaning has a tint and the ink that is written on it. */
+  --color-flag: #96281b;
+  --color-flag-tint: #fbe4e1;
+  --color-amber: #9a4410;
+  --color-amber-tint: #fdeadb;
   /* Go-ahead and done. */
-  --color-green: #1d6b4a;
-  --color-green-tint: #dcefe4;
+  --color-green: #0f6a57;
+  --color-green-tint: #e3f4ef;
   /* Out of the firm's hands: waiting on the client. */
-  --color-plum: #5a3e85;
-  --color-plum-tint: #ebe5f4;
-  --color-demo: #10171b;
-  --font-serif: var(--font-besley), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --color-plum: #55408f;
+  --color-plum-tint: #ece4f7;
+  /* Just arrived. */
+  --color-sky: #24498c;
+  --color-sky-tint: #e1ecfb;
+  --color-lime: #55620c;
+  --color-lime-tint: #f1f8cf;
+  --color-demo: #16201e;
+  --font-serif: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-hanken), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  /* A card that floats: the inquiry sheet, the stage counts, the step that is next. */
+  --shadow-lift: 0 1px 2px rgba(22, 32, 30, 0.04), 0 18px 44px rgba(22, 32, 30, 0.08);
+  --shadow-rest: 0 1px 2px rgba(22, 32, 30, 0.05);
 }
 
 body {
-  background: var(--color-salt);
+  background: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-lake);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-fern);
+  outline-offset: 3px;
 }
 
 .on-dark :focus-visible,
 .on-dark:focus-visible {
   outline-color: #ffffff;
-}
-
-/* A dialog opened from the dark demo bar is a light sheet, so its focus ring goes back to the dark one. */
-.on-dark dialog :focus-visible {
-  outline-color: var(--color-lake);
 }
 
 @layer components {
@@ -64,12 +69,12 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.5rem 1.125rem;
-    border-radius: 0.25rem;
-    border: 1.5px solid transparent;
+    min-height: 2.875rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.2;
     cursor: pointer;
     transition: background-color 120ms, border-color 120ms;
@@ -79,95 +84,139 @@ body {
     opacity: 0.55;
   }
   .btn-primary {
-    background: var(--color-petrol);
+    background: var(--color-forest);
+    border-color: var(--color-forest);
     color: #ffffff;
   }
   .btn-primary:hover:not(:disabled) {
-    background: var(--color-petrol-deep);
+    background: var(--color-fern);
+    border-color: var(--color-fern);
   }
   .btn-quiet {
     background: var(--color-surface);
-    border-color: var(--color-petrol);
-    color: var(--color-petrol);
+    border-color: var(--color-edge);
+    color: var(--color-ink);
   }
   .btn-quiet:hover:not(:disabled) {
-    background: var(--color-lake-tint);
+    border-color: var(--color-forest);
   }
   .btn-danger {
     background: var(--color-surface);
-    border-color: var(--color-flag);
+    border-color: #e6b5ad;
     color: var(--color-flag);
   }
   .btn-danger:hover:not(:disabled) {
     background: var(--color-flag-tint);
   }
+  .btn-small {
+    min-height: 2.375rem;
+    padding: 0.375rem 1.125rem;
+    font-size: 0.9375rem;
+  }
 
   .field {
     width: 100%;
-    min-height: 2.75rem;
-    padding: 0.5rem 0.75rem;
-    border: 1.5px solid #7c888e;
-    border-radius: 0.25rem;
+    min-height: 2.875rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--color-edge);
+    border-radius: 0.75rem;
     background: var(--color-surface);
     font-size: 1rem;
   }
   .field::placeholder {
-    color: #5d696f;
+    color: var(--color-faint);
   }
 
   .link {
-    color: var(--color-lake);
+    color: var(--color-fern);
     font-weight: 600;
     text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-fern) 35%, transparent);
     text-decoration-thickness: 1.5px;
     text-underline-offset: 3px;
   }
   .link:hover {
-    color: var(--color-petrol);
+    text-decoration-color: var(--color-fern);
   }
 
   /*
    * Anything that belongs to the demo rather than to the firm's own software
-   * is drawn the same way: a dashed outline, like a note clipped to the page.
+   * is drawn the same way: a dashed outline on a grey ground, like a note clipped to the page.
    */
   .demo-note {
-    border: 1.5px dashed var(--color-ink);
-    border-radius: 0.5rem;
-    background: var(--color-surface);
+    border: 1px dashed #a9b0aa;
+    border-radius: 0.875rem;
+    background: #f8f8f5;
   }
 
-  /* One thing on the firm side: a white panel standing off the desk. */
+  /* One thing on the firm side: a white card with a hairline edge. */
   .panel {
     background: var(--color-surface);
-    border: 1px solid #c3ced2;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 2px rgba(11, 40, 54, 0.06), 0 8px 20px -14px rgba(11, 40, 54, 0.35);
+    border: 1px solid var(--color-line);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-rest);
   }
 
-  /* The small capital label over a value or a column. */
+  /* The small grey label over a headline, a value or a column. */
   .eyebrow {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-faint);
   }
 
-  /* The inquiry on the client page: a sheet of the firm's letterhead lying on the desk. */
+  /* A headline: light, tight, with one phrase set in the serif. */
+  .display {
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  .accent {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    color: var(--color-fern);
+  }
+
+  /* A figure: a count, a score, a step number. */
+  .figure {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  /* A small coloured label. The colour says what kind of thing it is. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1875rem 0.6875rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  /* The inquiry on the client page: a white card floating over the photograph. */
   .sheet {
     background: var(--color-surface);
-    box-shadow: 0 2px 6px rgba(11, 40, 54, 0.08), 0 30px 60px -30px rgba(11, 40, 54, 0.45);
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-lift);
   }
 
-  /* A line to write on, in place of a boxed field. */
+  /* The answer box inside the inquiry's rounded field. */
   .field-line {
     width: 100%;
-    min-height: 2.75rem;
+    min-width: 0;
+    min-height: 2.375rem;
     background: transparent;
-    font-size: 1.125rem;
+    font-size: 1rem;
   }
   .field-line::placeholder {
-    color: #5d696f;
+    color: var(--color-faint);
   }
   /* While a script is typing into it the line is locked, and what is typed must still read as ink, with a caret after it. */
   .field-line:disabled {
@@ -179,19 +228,20 @@ body {
     outline: none;
   }
 
-  /* The engagement letter, shown as a sheet of paper like the inquiry. */
+  /* The engagement letter, shown as a sheet of paper. */
   .letter {
     background: var(--color-surface);
     border: 1px solid var(--color-line);
-    box-shadow: 0 1px 0 var(--color-line), 0 18px 40px -28px rgba(18, 56, 74, 0.5);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lift);
     font-family: var(--font-serif);
-    font-size: 1.0625rem;
-    line-height: 1.7;
+    font-size: 1.125rem;
+    line-height: 1.65;
   }
   .letter h3 {
     margin-top: 1.75rem;
-    font-family: var(--font-serif);
-    font-size: 1.0625rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
     font-weight: 600;
   }
   .letter p,
@@ -219,7 +269,7 @@ body {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: var(--color-lake);
+  background: var(--color-fern);
   animation: typing 1s ease-in-out infinite;
 }
 .typing i:nth-child(3) {
@@ -259,8 +309,8 @@ body {
  */
 @keyframes flash {
   from {
-    background-color: var(--color-lake-pale);
-    box-shadow: 0 0 0 0.375rem var(--color-lake-pale);
+    background-color: var(--color-mint-strong);
+    box-shadow: 0 0 0 0.375rem var(--color-mint-strong);
   }
   to {
     background-color: transparent;
@@ -290,7 +340,7 @@ body {
   width: 0;
   height: 0;
   border-radius: 0.625rem;
-  box-shadow: 0 0 0 200vmax rgba(16, 23, 27, 0.62), 0 0 0 2px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 200vmax rgba(22, 32, 30, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 /* The story's own pointer. Its tip is the top left corner, and the ring is the press. */
@@ -314,8 +364,8 @@ body {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  border: 3px solid var(--color-lake-pale);
-  background: rgba(169, 214, 223, 0.35);
+  border: 3px solid var(--color-mint-strong);
+  background: rgba(191, 230, 220, 0.4);
   opacity: 0;
 }
 .story-tap span {
@@ -351,7 +401,7 @@ body {
 }
 
 dialog.demo-dialog::backdrop {
-  background: rgba(16, 23, 27, 0.6);
+  background: rgba(22, 32, 30, 0.5);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -364,13 +414,28 @@ dialog.demo-dialog::backdrop {
   /* No fade: the changed value holds a plain wash until the class is taken off. */
   .flash {
     animation: none;
-    background-color: var(--color-lake-pale);
-    box-shadow: 0 0 0 0.375rem var(--color-lake-pale);
+    background-color: var(--color-mint-strong);
+    box-shadow: 0 0 0 0.375rem var(--color-mint-strong);
   }
   .btn {
     transition: none;
   }
   html {
     scroll-behavior: auto;
+  }
+}
+
+/*
+ * The wash over the client page's opening photograph. On a laptop it is heaviest on the left,
+ * under the headline, and clears to the right; on a phone the type runs the full width, so it is even.
+ * Either way it fades to the white page at the bottom.
+ */
+.hero-wash {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 72%, #ffffff 100%), linear-gradient(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.84));
+}
+@media (min-width: 64rem) {
+  .hero-wash {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 72%, #ffffff 100%),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.72) 48%, rgba(255, 255, 255, 0.2) 100%);
   }
 }

@@ -76,7 +76,7 @@ export function HandoffCard({ path, children }: { path: string; children: React.
           appears here.
         </p>
         <p className="mt-3 text-[0.9375rem] text-muted">To try it on this computer, open this link in a second browser. It works for 15 minutes.</p>
-        <p className="mt-1.5 select-all break-all rounded border border-line bg-salt px-3 py-2 font-mono text-sm">{view.url}</p>
+        <p className="mt-1.5 select-all break-all rounded-xl border border-line bg-stone px-3 py-2 font-mono text-sm">{view.url}</p>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export function HandoffCard({ path, children }: { path: string; children: React.
   const size = view.qr.length + QUIET * 2;
   return (
     <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
-      <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="QR code that opens this demo on your phone" shapeRendering="crispEdges" className="size-44 shrink-0 rounded-sm border border-line bg-white">
+      <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="QR code that opens this demo on your phone" shapeRendering="crispEdges" className="size-44 shrink-0 rounded-lg border border-line bg-white">
         {view.qr.map((row, y) => row.split("").map((cell, x) => (cell === "1" ? <rect key={`${x}-${y}`} x={x + QUIET} y={y + QUIET} width={1} height={1} fill="#10171b" /> : null)))}
       </svg>
       <div className="min-w-0 flex-1 basis-48">

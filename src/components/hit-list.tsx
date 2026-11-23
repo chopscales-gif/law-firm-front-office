@@ -1,9 +1,9 @@
 import type { ConflictHit, Level } from "@/lib/conflicts/check";
 
 const LEVEL: Record<Level, { label: string; box: string; chip: string }> = {
-  conflict: { label: "Possible conflict", box: "border-flag bg-flag-tint", chip: "bg-flag text-white" },
-  review: { label: "Needs review", box: "border-amber bg-amber-tint", chip: "bg-amber text-white" },
-  info: { label: "For information", box: "border-[#7c888e] bg-salt", chip: "bg-[#c9d2d6] text-ink" },
+  conflict: { label: "Possible conflict", box: "border-[#f3cfc9] bg-gradient-to-br from-surface from-40% to-flag-tint", chip: "bg-flag text-white" },
+  review: { label: "Needs review", box: "border-[#f6d3b8] bg-gradient-to-br from-surface from-40% to-amber-tint", chip: "bg-amber text-white" },
+  info: { label: "For information", box: "border-line bg-surface", chip: "bg-stone text-[#565d5a]" },
 };
 
 const SUBJECT_ROLE = { prospect: "Prospective client", adverse: "Other side", related: "Also involved" };
@@ -23,26 +23,26 @@ export function HitList({ hits, searched = "In this inquiry" }: { hits: Conflict
         const level = LEVEL[hit.level];
         const quiet = hit.level === "info";
         return (
-          <li key={i} className={`rounded-md border border-l-[6px] ${level.box}`}>
+          <li key={i} className={`rounded-2xl border ${level.box}`}>
             <div className={quiet ? "px-4 py-3" : "px-5 py-4"}>
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <span className={`rounded-full px-3 py-1 text-[0.875rem] font-bold leading-tight ${level.chip}`}>{level.label}</span>
+                <span className={`tag ${level.chip}`}>{level.label}</span>
                 <span className="text-[0.9375rem] font-semibold">
                   {STRENGTH[hit.strength]}, {Math.round(hit.score * 100)}%
                 </span>
               </div>
 
               <div className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-[1fr_auto_1fr] sm:items-stretch">
-                <div className="rounded bg-surface px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
+                <div className="rounded-[0.875rem] border border-line bg-surface px-4 py-3.5 shadow-rest">
                   <p className="text-[0.9375rem] text-muted">{searched}: {SUBJECT_ROLE[hit.subject.role].toLowerCase()}</p>
-                  <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-medium"}`}>{hit.subject.name}</p>
+                  <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-normal"}`}>{hit.subject.name}</p>
                 </div>
-                <p className="self-center text-[0.9375rem] font-semibold italic sm:text-center">matches</p>
-                <div className="rounded bg-surface px-4 py-3 shadow-[inset_0_0_0_1px_var(--color-line)]">
+                <p className="self-center text-[0.9375rem] font-serif italic text-muted sm:text-center">matches</p>
+                <div className="rounded-[0.875rem] border border-line bg-surface px-4 py-3.5 shadow-rest">
                   <p className="text-[0.9375rem] text-muted">
                     On file: {PARTY_ROLE[hit.partyRole].toLowerCase()}, {hit.matterStatus} matter
                   </p>
-                  <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-medium"}`}>{hit.partyName}</p>
+                  <p className={`font-serif leading-snug ${quiet ? "text-lg" : "text-2xl font-normal"}`}>{hit.partyName}</p>
                   {hit.viaAlias && <p className="text-[0.9375rem] text-muted">Also known as {hit.matchedName}</p>}
                 </div>
               </div>

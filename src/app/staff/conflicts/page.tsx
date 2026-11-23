@@ -27,13 +27,13 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
 
   return (
     <>
-      <PageHeader title="Conflict search">
+      <PageHeader label="Conflict search" title="Check any name" accent="against every file.">
         Check any name against every client, opposing party and related name on file. The search allows for nicknames, former names, misspellings and
         business names written differently. It finds matches for a lawyer to assess. It does not decide whether a conflict exists.
       </PageHeader>
 
       {/* Keyed by the search, so the fields show an example's name and role when one is clicked. */}
-      <form key={`${name}|${role}`} action="/staff/conflicts" className="panel grid max-w-[60rem] gap-4 border-t-[6px] !border-t-petrol px-5 py-5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
+      <form key={`${name}|${role}`} action="/staff/conflicts" className="panel grid max-w-[60rem] gap-4 px-5 py-5 !shadow-lift sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
         <div>
           <label htmlFor="name" className="block font-semibold">
             Name of a person or business
@@ -69,7 +69,7 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
               <Link
                 href={`/staff/conflicts?name=${encodeURIComponent(example.name)}&role=${example.role}`}
                 aria-current={example.name === name && example.role === role ? "true" : undefined}
-                className="flex h-full min-h-11 flex-col rounded border-[1.5px] border-line px-3 py-2 hover:border-demo aria-[current]:border-demo aria-[current]:bg-demo aria-[current]:text-white"
+                className="flex h-full min-h-11 flex-col rounded-xl border border-line bg-surface px-3 py-2 hover:border-forest aria-[current]:border-forest aria-[current]:bg-forest aria-[current]:text-white"
               >
                 <span className="font-semibold leading-snug">{example.name}</span>
                 <span className="mt-0.5 text-sm leading-snug opacity-75">{example.shows}</span>
@@ -82,11 +82,11 @@ export default async function ConflictSearchPage({ searchParams }: PageProps<"/s
       {result && (
         <section aria-live="polite" className="panel mt-8 max-w-[60rem] px-5 py-6">
           <p className="eyebrow">Results for</p>
-          <h2 className="font-serif text-[1.75rem] font-semibold leading-tight text-petrol">{name}</h2>
-          <div className={`mt-4 rounded-md border border-l-[6px] px-5 py-4 ${OUTCOME[result.outcome].box}`}>
+          <h2 className="font-serif text-[1.75rem] font-normal leading-tight">{name}</h2>
+          <div className={`mt-4 rounded-2xl border px-5 py-4 ${OUTCOME[result.outcome].box}`}>
             <div className="flex flex-wrap items-center gap-3">
               <OutcomeChip outcome={result.outcome} />
-              <p className="text-[1.0625rem] font-bold">{result.summary}</p>
+              <p className="font-serif text-xl leading-snug">{result.summary}</p>
             </div>
             {result.hits.length > 0 && <p className="mt-2 text-[0.9375rem]">{result.partiesSearched} names on file searched.</p>}
           </div>

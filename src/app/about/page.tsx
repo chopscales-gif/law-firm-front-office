@@ -17,31 +17,33 @@ const CONNECTS = [
   { to: "E-signature record keeping", what: "The signed letter and its record of who signed, when and how are filed with the matter." },
 ];
 
-const linkOnDark = "font-semibold text-white underline decoration-white/50 underline-offset-4 hover:decoration-white [overflow-wrap:anywhere]";
+const contactLink = "link [overflow-wrap:anywhere]";
 
 /**
  * The closing screen. Unlike every other page, this one is ChopMedia speaking,
- * not the firm, so it is drawn in the demo bar's colours and makes no claim
+ * not the firm, so it closes on a panel of its own and makes no claim
  * the demo cannot back: no clients, no numbers, no integrations said to exist.
  */
 export default function AboutPage() {
   return (
     <main className="w-full flex-1">
-      <div className="mx-auto w-full max-w-[64rem] px-4 pb-16 pt-10 sm:px-6 lg:px-10 lg:pt-14">
-        <p className="font-semibold">A demonstration build by ChopMedia</p>
-        <h1 className="mt-2 max-w-[20ch] font-serif text-[2.5rem] font-medium leading-[1.06] tracking-[-0.015em] sm:text-6xl">What you just saw</h1>
+      <div className="mx-auto w-full max-w-[64rem] px-5 pb-16 pt-10 sm:px-8 lg:pt-14">
+        <p className="eyebrow">A demonstration build by ChopMedia</p>
+        <h1 className="display mt-3 text-[clamp(2.5rem,5vw,4.125rem)]">
+          What you <span className="accent">just saw</span>
+        </h1>
         <ol className="mt-7 max-w-[70ch] space-y-3.5">
           {SAW.map((line, i) => (
             <li key={line} className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-x-2 text-lg leading-relaxed">
-              <span className="font-serif text-xl font-semibold text-lake">{i + 1}</span>
+              <span className="figure pt-1 text-2xl text-fern">{i + 1}</span>
               <span>{line}</span>
             </li>
           ))}
         </ol>
 
-        <div className="mt-12 grid gap-x-12 gap-y-10 border-t-2 border-ink pt-8 lg:grid-cols-2">
+        <div className="mt-12 grid gap-x-12 gap-y-10 border-t border-line pt-10 lg:grid-cols-2">
           <section>
-            <h2 className="font-serif text-2xl font-semibold leading-tight">What a real version would connect to</h2>
+            <h2 className="font-serif text-2xl font-normal leading-tight">What a real version would connect to</h2>
             <p className="mt-2 leading-relaxed text-muted">
               Nothing here is connected to anything. Built for a firm, the same steps would be wired to the systems that firm already uses.
             </p>
@@ -56,7 +58,7 @@ export default function AboutPage() {
           </section>
 
           <section>
-            <h2 className="font-serif text-2xl font-semibold leading-tight">What is recorded here, and what would be live</h2>
+            <h2 className="font-serif text-2xl font-normal leading-tight">What is recorded here, and what would be live</h2>
             <p className="mt-2 leading-relaxed text-muted">No AI model runs in this demo, so it behaves the same way for every visitor.</p>
             <dl className="mt-4 space-y-4">
               <div>
@@ -83,36 +85,38 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <section className="on-dark bg-demo text-white">
-        <div className="mx-auto w-full max-w-[64rem] px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
-          <h2 className="max-w-[26ch] font-serif text-[1.75rem] font-medium leading-tight sm:text-4xl">Want to see it run on one of your own documents or inquiries?</h2>
-          <p className="mt-3 max-w-[58ch] text-lg leading-relaxed text-white/85">Send one and I will run it live on a call.</p>
-          <p className="mt-6 max-w-[58ch] leading-relaxed text-white/85">ChopMedia is Hayden Huelskamp, an engineer based in Utah.</p>
+      <section className="mx-auto w-full max-w-[64rem] px-5 pb-16 sm:px-8">
+        <div className="rounded-3xl border border-line bg-gradient-to-br from-surface from-30% to-mint px-6 py-9 sm:px-10 sm:py-12">
+          <h2 className="display max-w-[24ch] text-[clamp(1.75rem,3.5vw,2.875rem)]">
+            Want to see it run <span className="accent">on one of your own documents or inquiries?</span>
+          </h2>
+          <p className="mt-3 max-w-[58ch] text-lg leading-relaxed text-muted">Send one and I will run it live on a call.</p>
+          <p className="mt-6 max-w-[58ch] leading-relaxed text-muted">ChopMedia is Hayden Huelskamp, an engineer based in Utah.</p>
           <dl className="mt-4 grid gap-x-10 gap-y-3 sm:grid-cols-[auto_minmax(0,1fr)]">
-            <dt className="text-white/75">Email</dt>
+            <dt className="text-muted">Email</dt>
             <dd>
-              <a href="mailto:chopscales@gmail.com" className={linkOnDark}>
+              <a href="mailto:chopscales@gmail.com" className={contactLink}>
                 chopscales@gmail.com
               </a>
             </dd>
-            <dt className="text-white/75">LinkedIn</dt>
+            <dt className="text-muted">LinkedIn</dt>
             <dd>
-              <a href="https://www.linkedin.com/in/hayden-huelskamp-547a86302/" className={linkOnDark}>
+              <a href="https://www.linkedin.com/in/hayden-huelskamp-547a86302/" className={contactLink}>
                 linkedin.com/in/hayden-huelskamp-547a86302
               </a>
             </dd>
-            <dt className="text-white/75">The other four demos</dt>
+            <dt className="text-muted">The other four demos</dt>
             <dd>
-              <a href="https://chopmedia.vercel.app" className={linkOnDark}>
+              <a href="https://chopmedia.vercel.app" className={contactLink}>
                 chopmedia.vercel.app
               </a>
             </dd>
           </dl>
           <div className="mt-8 flex flex-wrap gap-2">
-            <Link href="/" className="inline-flex min-h-11 items-center rounded-sm bg-white px-4 font-semibold text-demo hover:bg-white/85">
+            <Link href="/" className="btn btn-primary">
               Back to the client side
             </Link>
-            <Link href="/staff" className="inline-flex min-h-11 items-center rounded-sm border-[1.5px] border-white px-4 font-semibold hover:bg-white/15">
+            <Link href="/staff" className="btn btn-quiet">
               Back to the firm side
             </Link>
           </div>

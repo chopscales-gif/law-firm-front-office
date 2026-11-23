@@ -8,8 +8,8 @@ import type { Firm } from "@/lib/intake";
 export function Letter({ firm, blocks, children }: { firm: Firm; blocks: Block[]; children?: React.ReactNode }) {
   return (
     <article className="letter px-6 py-8 sm:px-14 sm:py-14">
-      <header className="border-b-2 border-petrol pb-3">
-        <p className="font-serif text-2xl font-semibold leading-tight text-petrol [overflow-wrap:anywhere]">{firm.name}</p>
+      <header className="border-b border-line pb-4">
+        <p className="font-serif text-[1.625rem] font-normal leading-tight tracking-[-0.01em] [overflow-wrap:anywhere]">{firm.name}</p>
         <p className="mt-1.5 text-[0.9375rem] text-muted">
           {firm.address}. <span className="whitespace-nowrap">{firm.phone}</span>
         </p>

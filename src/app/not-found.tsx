@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="w-full max-w-3xl flex-1 px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-      <h1 className="font-serif text-4xl font-medium leading-tight tracking-[-0.015em] sm:text-5xl">That page is not here</h1>
+    <main className="mx-auto w-full max-w-[82rem] flex-1 px-5 py-16 sm:px-8 lg:py-24">
+      <h1 className="display max-w-[20ch] text-[clamp(2.125rem,4.2vw,3.5rem)]">That page is not here</h1>
       <p className="mt-4 max-w-[62ch] text-lg leading-relaxed text-muted">
         The link may be from before the demo data was reset, or from another browser. Each visitor gets their own private copy of the sample data.
       </p>
