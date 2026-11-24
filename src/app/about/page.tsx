@@ -107,8 +107,8 @@ export default function AboutPage() {
             </dd>
             <dt className="text-muted">The other four demos</dt>
             <dd>
-              <a href="https://chopmedia.vercel.app" className={contactLink}>
-                chopmedia.vercel.app
+              <a href="https://haydenhuelskamp.vercel.app" className={contactLink}>
+                haydenhuelskamp.vercel.app
               </a>
             </dd>
           </dl>
